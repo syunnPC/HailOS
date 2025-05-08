@@ -1,0 +1,13 @@
+[Defines]
+  DEC_SPECIFICATION = 0x00010005
+  PACKAGE_NAME      = FrostLoaderPkg
+  PACKAGE_GUID      = 71889737-1237-4e32-9788-b74474318ae5
+  PACKAGE_VERSION   = 0.1
+
+[Includes]
+  Library/Boot
+  Library/Common
+  Library/ElfLoaderLib
+  Library/UtilityLib
+  Library/VgaLib
+  FrostLoader
