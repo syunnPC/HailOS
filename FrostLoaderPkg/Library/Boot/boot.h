@@ -13,6 +13,7 @@ typedef struct
     UINTN Argc;
     char** Args;
     EFI_MEMORY_DESCRIPTOR* MemoryMap;
+    UINTN EntryCount;
     graphic_info_t* GraphicInfo;
 } PACKED_STRUCTURE bootinfo_t;
 
