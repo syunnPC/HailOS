@@ -17,7 +17,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
     UINTN MapKey, DescriptorSize;
     UINT32 DescriptorVersion;
     EFI_MEMORY_DESCRIPTOR* MemoryMap = NULL;
-    bootinfo_t BootInfo = {0, NULL, NULL, &gGraphicInfo};
+    bootinfo_t BootInfo = {0, NULL, NULL,0, &gGraphicInfo};
 
     Status = InitializeGraphics();
     if(EFI_ERROR(Status))
