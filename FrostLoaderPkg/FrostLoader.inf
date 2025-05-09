@@ -11,6 +11,7 @@
   Library/ElfLoaderLib/elfldr.c
   Library/UtilityLib/util.c
   Library/VgaLib/vgalib.c
+  Library/MemoryManagerLib/memmgr.c
 
 [Packages]
   MdePkg/MdePkg.dec

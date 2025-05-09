@@ -8,6 +8,7 @@
 #include "UtilityLib/util.h"
 #include "ElfLoaderLib/elfldr.h"
 #include "Boot/boot.h"
+#include "MemoryManagerLib/memmgr.h"
 
 EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 {
@@ -17,7 +18,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
     UINTN MapKey, DescriptorSize;
     UINT32 DescriptorVersion;
     EFI_MEMORY_DESCRIPTOR* MemoryMap = NULL;
-    bootinfo_t BootInfo = {0, NULL, NULL, &gGraphicInfo};
+    bootinfo_t BootInfo = {0, NULL, &gMemoryInfo, &gGraphicInfo};
 
     Status = InitializeGraphics();
     if(EFI_ERROR(Status))
@@ -43,10 +44,11 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
         Panic(Status, 3, 1);
     }
 
+    MemoryMapSize += DescriptorSize*10;
     MemoryMap = AllocatePool(MemoryMapSize);
     if(MemoryMap == NULL)
     {
-        Panic(STATUS_MEMORY_ALLOCATION_FAILED, 3, 2);
+        Panic(EFI_OUT_OF_RESOURCES, 3, 2);
     }
 
     Status = gBS->GetMemoryMap(&MemoryMapSize, MemoryMap, &MapKey, &DescriptorSize, &DescriptorVersion);
@@ -55,8 +57,6 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
         Panic(Status, 3, 3);
     }
 
-    BootInfo.MemoryMap = MemoryMap;
-
     Status = gBS->ExitBootServices(ImageHandle, MapKey);
     if(EFI_ERROR(Status))
     {
@@ -64,6 +64,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
     }
 
     kernel_entrypoint_t Main = (kernel_entrypoint_t)(UINTN)(EntryPoint);
+    ParseFreeMemory(MemoryMap, MemoryMapSize, DescriptorSize);
     Main(BootInfo);
 
     HaltProcessor();
