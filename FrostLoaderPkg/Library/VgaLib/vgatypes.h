@@ -3,8 +3,6 @@
 #include "Common/typelib.h"
 #include "Common/commonlib.h"
 
-#pragma pack(1) 
-
 #define PIXEL_SIZE 4
 
 typedef struct

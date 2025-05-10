@@ -1,5 +1,7 @@
 #include "memmgr.h"
 
+meminfo_t gMemoryInfo;
+
 void ParseFreeMemory(EFI_MEMORY_DESCRIPTOR* MemoryMap, UINTN MemoryMapSize, UINTN DescriptorSize)
 {
     UINTN EntryCount = MemoryMapSize / DescriptorSize;

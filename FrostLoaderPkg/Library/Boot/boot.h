@@ -19,6 +19,6 @@ typedef struct
     graphic_info_t* GraphicInfo;
 } PACKED_STRUCTURE bootinfo_t;
 
-typedef void(*kernel_entrypoint_t)(bootinfo_t);
+typedef void(*kernel_entrypoint_t)(bootinfo_t*);
 
 void ParseFreeMemory(EFI_MEMORY_DESCRIPTOR*, UINTN, UINTN);

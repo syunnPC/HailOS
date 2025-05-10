@@ -6,6 +6,7 @@
 #include "Common/status.h"
 
 static boolean IsInitialized;
+graphic_info_t gGraphicInfo;
 
 EFI_STATUS InitializeGraphics(void)
 {

@@ -1,3 +1,5 @@
+#pragma once
+
 typedef unsigned char u8, byte, uchar, boolean, char8;
 typedef unsigned short u16, word, ushort, char16;
 typedef unsigned int u32, dword, uint, char32;
