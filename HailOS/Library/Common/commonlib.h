@@ -1,7 +1,5 @@
 #pragma once
 
-#if defined __GNUC__ && !defined __clang__
-
 #ifndef NORETURN
 #define NORETURN __attribute__((noreturn))
 #endif
@@ -14,14 +12,10 @@
 #define NULL (void*)0
 #endif
 
-#elif
-
 #ifndef NORETURN
 #define NORETURN
 #endif
 
 #ifndef PACKED
 #define PACKED
-#endif
-
 #endif
