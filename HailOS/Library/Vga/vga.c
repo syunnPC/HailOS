@@ -1,4 +1,5 @@
 #include "vga.h"
+#include "Utility/util.h"
 #include "Common/status.h"
 #include "hailkrnl.h"
 

@@ -1,9 +1,9 @@
 #pragma once
 
 #include "kerneltype.h"
-#include "Library/Common/commonlib.h"
-#include "Library/Common/typelib.h"
-#include "Library/Common/status.h"
+#include "Common/commonlib.h"
+#include "Common/typelib.h"
+#include "Common/status.h"
 
 extern gdt_entry_t gGDT[GDT_ENTRIES];
 extern gdtr_t gGDTR;

@@ -1,6 +1,6 @@
 #pragma once
-#include "Library/Common/commonlib.h"
-#include "Library/Common/typelib.h"
+#include "Common/commonlib.h"
+#include "Common/typelib.h"
 
 #define IDT_ENTRIES 256
 #define GDT_ENTRIES 3

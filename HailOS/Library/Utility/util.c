@@ -2,6 +2,7 @@
 #include "Common/commonlib.h"
 #include "Common/typelib.h"
 #include "kerneltype.h"
+#include "Vga/print.h"
 
 NORETURN void HaltProcessor(void)
 {
@@ -13,7 +14,9 @@ NORETURN void HaltProcessor(void)
 
 NORETURN void Panic(u32 Code, u32 Param1, u32 Param2)
 {
-    Reboot();
+    Fill((rgbcolor_t){.Red = 41, .Green = 152, .Blue = 240});
+    PrintString("System Error. System halted.", (coordinate2D_t){.X = 10, .Y = 10}, (rgbcolor_t){.Red = 255, .Blue = 255, .Green = 255});
+    HaltProcessor();
 }
 
 NORETURN void Reboot(void)

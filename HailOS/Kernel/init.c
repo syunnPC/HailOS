@@ -1,5 +1,5 @@
 #include "init.h"
-#include "Library/Utility/util.h"
+#include "Utility/util.h"
 
 gdt_entry_t gGDT[GDT_ENTRIES];
 gdtr_t gGDTR;
@@ -13,13 +13,14 @@ void SetGDTEntry(int Idx, u32 Base, u32 Limit, u8 Access, u8 Gran)
 
 void InitGDT(void)
 {
-    SetGDTEntry(0, 0, 0, 0, 0);
-    SetGDTEntry(1, 0, 0xFFFFF, 0x9A, 0xA0);
-    SetGDTEntry(2, 0, 0xFFFFF, 0x92, 0xA0);
+    SetGDTEntry(0, 0, 0, 0, 0);                         // null descriptor
+    SetGDTEntry(1, 0, 0xFFFFF, 0x9A, 0xA0);              // code segment
+    SetGDTEntry(2, 0, 0xFFFFF, 0x92, 0xA0);              // data segment
 
-    gGDTR = (gdtr_t){.Limit = sizeof(gGDT) -1, .Base = (u64)&gGDT};
+    gGDTR = (gdtr_t){ .Limit = sizeof(gGDT) - 1, .Base = (u64)&gGDT };
 
     asm volatile ("lgdt %0" : : "m"(gGDTR));
+
     asm volatile (
         "mov $0x10, %%ax\n"
         "mov %%ax, %%ds\n"
@@ -27,39 +28,16 @@ void InitGDT(void)
         "mov %%ax, %%ss\n"
         "mov %%ax, %%fs\n"
         "mov %%ax, %%gs\n"
-        "ljmp $0x08, $1f\n"
-        "1:\n"
+
+        // オペコードによる ljmp（FF 2E [offset:segment]）
+        "jmp *%0\n"
+
         :
-        :
-        : "rax", "memory"
+        : "m" ((const struct { u64 offset; u16 selector; }){ (u64)&&label, 0x08 })
+        : "memory", "rax"
     );
-}
-
-INTERRUPT void DefaultHandler(UNUSED void* Frame)
-{
-    HaltProcessor();
-}
-
-INTERRUPT void IsrDivideError(UNUSED void* Frame)
-{
-    HaltProcessor();
-}
-
-INTERRUPT void IsrInvalidOpcode(UNUSED void* Frame, UNUSED u64 ErrorCode)
-{
-    HaltProcessor();
-}
-
-INTERRUPT void IsrGPF(UNUSED void* Frame, UNUSED u64 ErrorCode)
-{
-    HaltProcessor();
-}
-
-INTERRUPT void IsrPageFault(UNUSED void* Frame, UNUSED u64 ErrorCode)
-{
-    u64 Addr;
-    asm volatile("mov %%cr2, %0" : "=r"(Addr));
-    HaltProcessor();
+label:
+    return;
 }
 
 void SetIDTEntry(int Vec, handler_t Hanlder, u8 TypeAttribute)
