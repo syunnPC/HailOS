@@ -64,7 +64,7 @@ EFI_STATUS LoadFileToMemory(CHAR16* FilePath, VOID** FileBuffer, UINTN* FileSize
     }
 
     *FileSize = FileInfo->FileSize;
-    Buffer = ALlocatePool(*FileSize);
+    Buffer = AllocatePool(*FileSize);
     if(Buffer == NULL)
     {
         FreePool(FileInfo);
@@ -124,7 +124,6 @@ EFI_STATUS PrepareElfExecutable(CHAR16* FileName, UINT64* EntryPoint)
     EFI_STATUS Status;
     VOID *Buffer;
     UINTN Size;
-    UINT64 EntryPoint;
     
     Status = LoadFileToMemory(FileName, &Buffer, &Size);
     if(EFI_ERROR(Status))
@@ -132,7 +131,7 @@ EFI_STATUS PrepareElfExecutable(CHAR16* FileName, UINT64* EntryPoint)
         return Status;
     }
 
-    Status = LoadElfExecutable(Buffer, Size, &EntryPoint);
+    Status = LoadElfExecutable(Buffer, Size, EntryPoint);
     if(EFI_ERROR(Status))
     {
         return Status;
