@@ -1,6 +1,6 @@
 #include "vga.h"
-#include "Utility/util.h"
-#include "Common/status.h"
+#include "util.h"
+#include "status.h"
 #include "hailkrnl.h"
 
 framebuffer_color_t ConvertColor(rgbcolor_t Color)

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Common/typelib.h"
-#include "Vga/vga.h"
-#include "MemoryManager/memmgr.h"
+#include "typelib.h"
+#include "vga.h"
+#include "memmgr.h"
 
 #define KERNEL_FILENAME L"\\kernel.elf"
 #define MAX_FREE_REGIONS 64

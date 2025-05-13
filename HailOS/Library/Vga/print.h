@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common/commonlib.h"
+#include "commonlib.h"
 #include "vga.h"
 
 void PrintChar(char,coordinate2D_t,rgbcolor_t);

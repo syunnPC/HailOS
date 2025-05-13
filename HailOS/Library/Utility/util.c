@@ -1,8 +1,8 @@
 #include "util.h"
-#include "Common/commonlib.h"
-#include "Common/typelib.h"
+#include "commonlib.h"
+#include "typelib.h"
 #include "kerneltype.h"
-#include "Vga/print.h"
+#include "print.h"
 
 NORETURN void HaltProcessor(void)
 {

@@ -1,6 +1,6 @@
 #include "init.h"
-#include "Common/commonlib.h"
-#include "Utility/util.h"
+#include "commonlib.h"
+#include "util.h"
 
 INTERRUPT void DefaultHandler(UNUSED void* Frame)
 {

@@ -8,12 +8,14 @@
 #include <Guid/FileInfo.h>
 
 #ifndef __GNUC__
-#error GCC is required.
+#define GCC is required.
 #endif
 
 #ifndef PACKED_STRUCTURE
 #define PACKED_STRUCTURE __attribute__((packed))
 #endif
+
+//Definitions related to status
 
 #define STATUS_SUCCESS 0
 #define STATUS_ALREADY_SATISFIED 0x1
@@ -28,30 +30,11 @@
 #define STATUS_INVALID_PARAMETER 0xC0000007
 #define STATUS_MEMORY_ALLOCATION_FAILED 0xC0000008
 #define STATUS_BUFFER_TOO_SMALL 0xC0000009
-#define STATUS_NOT_SUPPORTED 0xC000000A
-#define STATUS_NOT_AVAILABLE 0xC000000B
+#define STATUS_NOT_AVAILABLE 0xC000000A
 
 #define HOS_ERROR(x) (x >= 0xC0000000)
 
-#define KERNEL_FILENAME L"\\kernel.elf"
-#define MAX_FREE_REGIONS 64
-#define PAGE_SIZE 4096
-
-#define MAX_FREE_REGIONS 64
-#define PAGE_SIZE 4096
-
-#ifndef true
-#define true 1
-#endif
-
-#ifndef false
-#define false 0
-#endif
-
-#define EI_NIDENT 16
-#define PT_LOAD 1
-
-#define PIXEL_SIZE 4
+//Typedefs for basic types
 
 typedef unsigned char u8, byte, uchar, boolean, char8;
 typedef unsigned short u16, word, ushort, char16;
@@ -64,6 +47,23 @@ typedef int i32;
 typedef long long i64, ssize_t;
 
 typedef u32 HOSstatus;
+
+#ifndef true
+#define true 1
+#endif
+
+#ifndef false
+#define false 0
+#endif
+
+#define KERNEL_FILENAME L"\\kernel.elf"
+#define MAX_FREE_REGIONS 64
+#define PAGE_SIZE 4096
+
+#define EI_NIDENT 16
+#define PT_LOAD 1
+
+#define PIXEL_SIZE 4
 
 typedef struct
 {
@@ -98,8 +98,8 @@ typedef struct
 typedef struct
 {
     u8 Red;
-    u8 Blue;
     u8 Green;
+    u8 Blue;
 } PACKED_STRUCTURE rgbcolor_t;
 
 typedef struct
@@ -146,16 +146,31 @@ typedef struct
 typedef struct
 {
     UINTN Argc;
-    char** Args;
+    char8** Args;
     meminfo_t* MemoryInfo;
     graphic_info_t* GraphicInfo;
 } PACKED_STRUCTURE bootinfo_t;
 
 typedef void(*kernel_entrypoint_t)(bootinfo_t*);
 
-boolean IsInitialized;
+boolean IsInitialized = FALSE;
 graphic_info_t gGraphicInfo;
 meminfo_t gMemoryInfo;
+
+NORETURN void HaltProcessor(void)
+{
+    while(true)
+    {
+        asm volatile("hlt");
+    }
+}
+
+NORETURN void Panic(UINT64 Code, UINT64 Param, UINTN Line)
+{
+    Print(L"Panic %lu, Parameter: %lu, Line: %lu\n", Code, Param, Line);
+    Print(L"System halted.\n");
+    HaltProcessor();
+}
 
 EFI_STATUS LoadFileToMemory(CHAR16* FilePath, VOID** FileBuffer, UINTN* FileSize)
 {
@@ -164,7 +179,7 @@ EFI_STATUS LoadFileToMemory(CHAR16* FilePath, VOID** FileBuffer, UINTN* FileSize
     EFI_FILE_PROTOCOL* RootDir;
     EFI_FILE_PROTOCOL* File;
     EFI_LOADED_IMAGE_PROTOCOL* LoadedImage;
-    EFI_FILE_INFO* FileInfo;
+    EFI_FILE_INFO* FileInfo = NULL;
     UINTN FileInfoSize = 0;
     VOID* Buffer = NULL;
 
@@ -195,12 +210,16 @@ EFI_STATUS LoadFileToMemory(CHAR16* FilePath, VOID** FileBuffer, UINTN* FileSize
     Status = File->GetInfo(File, &gEfiFileInfoGuid, &FileInfoSize, NULL);
     if(Status != EFI_BUFFER_TOO_SMALL)
     {
+        File->Close(File);
+        RootDir->Close(RootDir);
         return Status;
     }
 
     FileInfo = AllocatePool(FileInfoSize);
     if(FileInfo == NULL)
     {
+        File->Close(File);
+        RootDir->Close(RootDir);
         return EFI_OUT_OF_RESOURCES;
     }
 
@@ -208,14 +227,18 @@ EFI_STATUS LoadFileToMemory(CHAR16* FilePath, VOID** FileBuffer, UINTN* FileSize
     if(EFI_ERROR(Status))
     {
         FreePool(FileInfo);
+        File->Close(File);
+        RootDir->Close(RootDir);
         return Status;
     }
 
-    *FileSize = FileInfo->FileSize;
+    *FileSize = (UINTN)FileInfo->FileSize;
     Buffer = AllocatePool(*FileSize);
     if(Buffer == NULL)
     {
         FreePool(FileInfo);
+        File->Close(File);
+        RootDir->Close(RootDir);
         return EFI_OUT_OF_RESOURCES;
     }
 
@@ -224,20 +247,24 @@ EFI_STATUS LoadFileToMemory(CHAR16* FilePath, VOID** FileBuffer, UINTN* FileSize
     {
         FreePool(FileInfo);
         FreePool(Buffer);
+        File->Close(File);
+        RootDir->Close(RootDir);
         return Status;
     }
 
     *FileBuffer = Buffer;
     FreePool(FileInfo);
+    File->Close(File);
+    RootDir->Close(RootDir);
     return EFI_SUCCESS;
 }
 
 EFI_STATUS LoadElfExecutable(VOID* Buffer, UINTN FileSize, UINT64* EntryPoint)
 {
     Elf64_Ehdr* Ehdr = (Elf64_Ehdr*)Buffer;
-    if(Ehdr->e_ident[0] != 0x7F || Ehdr->e_ident[1] != 'E' || Ehdr->e_ident[2] != 'L' || Ehdr->e_ident[3] != 'F')
+    if(Ehdr->e_ident[0]!=0x7F || Ehdr->e_ident[1] != 'E' || Ehdr->e_ident[2] != 'L' || Ehdr->e_ident[3] != 'F')
     {
-        return EFI_LOAD_ERROR;
+        return EFI_UNSUPPORTED;
     }
 
     Elf64_Phdr* Phdrs = (Elf64_Phdr*)((UINT8*)Buffer + Ehdr->e_phoff);
@@ -245,24 +272,28 @@ EFI_STATUS LoadElfExecutable(VOID* Buffer, UINTN FileSize, UINT64* EntryPoint)
     for(UINT16 i=0; i<Ehdr->e_phnum; i++)
     {
         Elf64_Phdr* Phdr = &Phdrs[i];
-        if(Phdr->p_type != PT_LOAD)
+        if(Phdr->p_type != PT_LOAD || Phdr->p_memsz == 0)
         {
             continue;
         }
 
-        EFI_PHYSICAL_ADDRESS SegmentAddr = Phdr->p_vaddr;
+        EFI_PHYSICAL_ADDRESS DestPhysAddr = Phdr->p_vaddr;
         UINTN Pages = EFI_SIZE_TO_PAGES(Phdr->p_memsz);
+        
+        EFI_STATUS Status = gBS->AllocatePages(AllocateAddress, EfiLoaderCode, Pages, &DestPhysAddr);
 
-        EFI_STATUS Status = gBS->AllocatePages(AllocateAddress, EfiLoaderData, Pages, &SegmentAddr);
-        if(EFI_ERROR(Status))
+        if(EFI_ERROR(Status) || DestPhysAddr != Phdr->p_vaddr)
         {
-            return Status;
+            return EFI_NOT_FOUND;
         }
 
-        CopyMem((VOID*)Phdr->p_vaddr, (UINT8*)Buffer+Phdr->p_offset, Phdr->p_filesz);
-        SetMem((VOID*)(Phdr->p_vaddr + Phdr->p_filesz), Phdr->p_memsz - Phdr->p_filesz, 0);
+        CopyMem((VOID*)(UINTN)DestPhysAddr, (UINT8*)Buffer + Phdr->p_offset, (UINTN)Phdr->p_filesz);
+        if (Phdr->p_memsz > Phdr->p_filesz)
+        {
+            SetMem((VOID*)(UINTN)(DestPhysAddr + Phdr->p_filesz), (UINTN)(Phdr->p_memsz - Phdr->p_filesz), 0);
+        }
     }
-
+    
     *EntryPoint = Ehdr->e_entry;
     return EFI_SUCCESS;
 }
@@ -270,9 +301,9 @@ EFI_STATUS LoadElfExecutable(VOID* Buffer, UINTN FileSize, UINT64* EntryPoint)
 EFI_STATUS PrepareElfExecutable(CHAR16* FileName, UINT64* EntryPoint)
 {
     EFI_STATUS Status;
-    VOID *Buffer;
-    UINTN Size;
-    
+    VOID* Buffer = NULL;
+    UINTN Size = 0;
+
     Status = LoadFileToMemory(FileName, &Buffer, &Size);
     if(EFI_ERROR(Status))
     {
@@ -285,44 +316,32 @@ EFI_STATUS PrepareElfExecutable(CHAR16* FileName, UINT64* EntryPoint)
         return Status;
     }
 
+    FreePool(Buffer);
     return EFI_SUCCESS;
-}
-
-NORETURN void HaltProcessor(void)
-{
-    while(true)
-    {
-        asm volatile("hlt");
-    }
-}
-
-NORETURN void Panic(u32 Code, u32 Param1, u32 Param2)
-{
-    Print(L"Panic %r\nParam1: %r\nParam2: %r\n\nSystem halted.");
-    HaltProcessor();
 }
 
 EFI_STATUS InitializeGraphics(void)
 {
     if(IsInitialized)
     {
-        return STATUS_ALREADY_SATISFIED;
+        return EFI_SUCCESS;
     }
 
     EFI_STATUS Status;
     EFI_GRAPHICS_OUTPUT_PROTOCOL* Gop;
-    
+
     Status = gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, NULL, (VOID**)&Gop);
     if(EFI_ERROR(Status))
     {
-        return STATUS_ERROR;
+        return Status;
     }
 
     gGraphicInfo.FrameBufferBase = Gop->Mode->FrameBufferBase;
     gGraphicInfo.FrameBufferSize = Gop->Mode->FrameBufferSize;
     gGraphicInfo.HorizontalResolution = Gop->Mode->Info->HorizontalResolution;
-    gGraphicInfo.VerticalResolution = Gop->Mode->Info->VerticalResolution;
-    gGraphicInfo.PixelsPerScanLine = Gop->Mode->Info->PixelsPerScanLine;
+    gGraphicInfo.VerticalResolution = Gop->Mode->Info->PixelsPerScanLine;
+    Status = EFI_SUCCESS;
+    
     switch(Gop->Mode->Info->PixelFormat)
     {
         case PixelRedGreenBlueReserved8BitPerColor:
@@ -332,12 +351,16 @@ EFI_STATUS InitializeGraphics(void)
             gGraphicInfo.PixelFormat = PIXELFORMAT_BGR;
             break;
         default:
-            Status = STATUS_UNSUPPORTED;
+            Status = EFI_UNSUPPORTED;
             gGraphicInfo.PixelFormat = PIXELFORMAT_INVALID;
             break;
     }
 
-    IsInitialized = true;
+    if(!EFI_ERROR(Status))
+    {
+        IsInitialized = true;
+    }
+
     return Status;
 }
 
@@ -345,10 +368,11 @@ framebuffer_color_t ConvertColor(rgbcolor_t Color)
 {
     if(!IsInitialized)
     {
-        Panic(STATUS_NOT_INITIALIZED, 1, 0);
+        Panic(STATUS_NOT_INITIALIZED, 0, __LINE__);
     }
 
     framebuffer_color_t Result = {0, 0, 0, 0};
+
     switch(gGraphicInfo.PixelFormat)
     {
         case PIXELFORMAT_RGB:
@@ -362,7 +386,7 @@ framebuffer_color_t ConvertColor(rgbcolor_t Color)
             Result.Color3 = Color.Red;
             break;
         default:
-            Panic(STATUS_UNSUPPORTED, 1, 0);
+            Panic(STATUS_UNSUPPORTED, 1, __LINE__);
     }
 
     return Result;
@@ -372,16 +396,16 @@ HOSstatus DrawPixel(coordinate2D_t Location, rgbcolor_t Color)
 {
     if(IsInitialized == false)
     {
-        return STATUS_NOT_INITIALIZED;
+        Panic(STATUS_NOT_INITIALIZED, 0, __LINE__);
     }
 
-    if(Location.X > gGraphicInfo.HorizontalResolution || Location.Y > gGraphicInfo.VerticalResolution)
+    if(Location.X >= gGraphicInfo.HorizontalResolution || Location.Y >= gGraphicInfo.VerticalResolution || Location.X < 0 || Location.Y < 0)
     {
         return STATUS_OUT_OF_RANGE;
     }
 
     framebuffer_color_t DstColor = ConvertColor(Color);
-    addr_t Offset = (Location.Y * gGraphicInfo.PixelsPerScanLine + Location.X) * PIXEL_SIZE;
+    addr_t Offset = ((addr_t)Location.Y*gGraphicInfo.PixelsPerScanLine + (addr_t)Location.X)*PIXEL_SIZE;
     framebuffer_color_t* PixelAddress = (framebuffer_color_t*)(gGraphicInfo.FrameBufferBase + Offset);
     *PixelAddress = DstColor;
 
@@ -398,71 +422,108 @@ void ParseFreeMemory(EFI_MEMORY_DESCRIPTOR* MemoryMap, UINTN MemoryMapSize, UINT
     {
         if(Desc->Type == EfiConventionalMemory)
         {
-            gMemoryInfo.FreeMemory[gMemoryInfo.FreeRegionCount].Base = Desc->PhysicalStart;
-            gMemoryInfo.FreeMemory[gMemoryInfo.FreeRegionCount].Length = Desc->NumberOfPages * PAGE_SIZE;
-            gMemoryInfo.FreeRegionCount++;
+            if(gMemoryInfo.FreeRegionCount < MAX_FREE_REGIONS)
+            {
+                gMemoryInfo.FreeMemory[gMemoryInfo.FreeRegionCount].Base = Desc->PhysicalStart;
+                gMemoryInfo.FreeMemory[gMemoryInfo.FreeRegionCount].Length = Desc->NumberOfPages * PAGE_SIZE;
+                gMemoryInfo.FreeRegionCount++;
+            }
+            else
+            {
+                break;
+            }
         }
 
-        Desc = (EFI_MEMORY_DESCRIPTOR*)((UINT8*)Desc + DescriptorSize);
+        Desc = (EFI_MEMORY_DESCRIPTOR*)((UINT8*)Desc+DescriptorSize);
     }
 }
 
 EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 {
+    Print(L"FrostLoader version 0.2\n\n");
+
     EFI_STATUS Status;
-    UINT64 EntryPoint;
-    UINTN MemoryMapSize = 0;
-    UINTN MapKey, DescriptorSize;
-    UINT32 DescriptorVersion;
+    UINT64 EntryPoint = 0;
     EFI_MEMORY_DESCRIPTOR* MemoryMap = NULL;
+    UINTN MemoryMapSize = 0;
+    UINTN MapKey = 0;
+    UINTN DescriptorSize = 0;
+    UINT32 DescriptorVesion = 0;
     bootinfo_t BootInfo = {0, NULL, &gMemoryInfo, &gGraphicInfo};
 
+    Print(L"Initializing graphics... ");
     Status = InitializeGraphics();
     if(EFI_ERROR(Status))
     {
-        Panic(Status, 1, 0);
+        Print(L"failed.\n");
+        Panic(Status, 0, __LINE__);
     }
+    Print(L"done.\n");
+
+    Print(L"Frame buffer base: 0x%lx, size: 0x%lx\n", gGraphicInfo.FrameBufferBase, gGraphicInfo.FrameBufferSize);
+    Print(L"Resolution: %ux%u, PPSL: %u, Format: %d\n", gGraphicInfo.HorizontalResolution, gGraphicInfo.VerticalResolution, gGraphicInfo.PixelsPerScanLine, gGraphicInfo.PixelFormat);
 
     if(gGraphicInfo.PixelFormat == PIXELFORMAT_INVALID)
     {
-        Print(L"Unsupported pixel format type detected.\n");
-        Panic(STATUS_UNSUPPORTED, 1, 1);
+        Panic(EFI_UNSUPPORTED, 0, __LINE__);
     }
 
+    Print(L"Loading kernel '%s'... ", KERNEL_FILENAME);
     Status = PrepareElfExecutable(KERNEL_FILENAME, &EntryPoint);
     if(EFI_ERROR(Status))
     {
-        Panic(Status, 2, 0);
+        Print(L"failed.\n");
+        Panic(Status, 0, __LINE__);
     }
+    Print(L"done.\n");
+    Print(L"Kernel loaded. Entry point address: 0x%lx\n",EntryPoint);
 
-    Status = gBS->GetMemoryMap(&MemoryMapSize, MemoryMap, &MapKey, &DescriptorSize, &DescriptorVersion);
-    if(Status != EFI_BUFFER_TOO_SMALL)
+    Print(L"Acquiring memory map and exiting boot services... ");
+
+    while(true)
     {
-        Panic(Status, 3, 1);
+        Status = gBS->GetMemoryMap(&MemoryMapSize, NULL, &MapKey, &DescriptorSize, &DescriptorVesion);
+        if(Status != EFI_BUFFER_TOO_SMALL)
+        {
+            Print(L"failed.\n");
+            Panic(Status, 0, __LINE__);
+        }
+
+        MemoryMapSize += DescriptorSize * 5;
+
+        if(MemoryMap != NULL)
+        {
+            gBS->FreePool(MemoryMap);
+            MemoryMap = NULL;
+        }
+
+        MemoryMap = AllocatePool(MemoryMapSize);
+
+        if(MemoryMap == NULL)
+        {
+            Print(L"failed.\n");
+            Panic(Status, 0, __LINE__);
+        }
+
+        Status = gBS->GetMemoryMap(&MemoryMapSize, NULL, &MapKey, &DescriptorSize, &DescriptorVesion);
+
+        if(EFI_ERROR(Status))
+        {
+            continue;
+        }
+
+        ParseFreeMemory(MemoryMap, MemoryMapSize, DescriptorSize);
+
+        Status = gBS->ExitBootServices(ImageHandle, MapKey);
+
+        if(!EFI_ERROR(Status))
+        {
+            break;
+        }
     }
 
-    MemoryMapSize += DescriptorSize*10;
-    MemoryMap = AllocatePool(MemoryMapSize);
-    if(MemoryMap == NULL)
-    {
-        Panic(1, 3, 2);
-    }
-
-    Status = gBS->GetMemoryMap(&MemoryMapSize, MemoryMap, &MapKey, &DescriptorSize, &DescriptorVersion);
-    if(EFI_ERROR(Status))
-    {
-        Panic(Status, 3, 3);
-    }
-
-    Status = gBS->ExitBootServices(ImageHandle, MapKey);
-    if(EFI_ERROR(Status))
-    {
-        Panic(Status, 4, 0);
-    }
-
-    kernel_entrypoint_t Main = (kernel_entrypoint_t)(UINTN)(EntryPoint);
-    ParseFreeMemory(MemoryMap, MemoryMapSize, DescriptorSize);
-    Main(&BootInfo);
+    kernel_entrypoint_t KernelMain = (kernel_entrypoint_t)EntryPoint;
+    KernelMain(&BootInfo);
 
     HaltProcessor();
 }

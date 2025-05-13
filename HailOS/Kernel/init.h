@@ -1,9 +1,9 @@
 #pragma once
 
 #include "kerneltype.h"
-#include "Common/commonlib.h"
-#include "Common/typelib.h"
-#include "Common/status.h"
+#include "commonlib.h"
+#include "typelib.h"
+#include "status.h"
 
 extern gdt_entry_t gGDT[GDT_ENTRIES];
 extern gdtr_t gGDTR;
@@ -30,5 +30,5 @@ INTERRUPT void IsrDoubleFault(void*, u64);
 INTERRUPT void IsrGPF(void*, u64);
 INTERRUPT void IsrPageFault(void*, u64);
 
-void SetIDTEntry(int, handler_t, u8);
+void SetIDTEntry(int, void*, u8);
 void InitIDT(void);

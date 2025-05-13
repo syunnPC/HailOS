@@ -1,6 +1,6 @@
 #include "print.h"
 #include "charset.h"
-#include "Common/typelib.h"
+#include "typelib.h"
 #include "hailkrnl.h"
 
 void PrintChar(char Ch, coordinate2D_t Location, rgbcolor_t Color)

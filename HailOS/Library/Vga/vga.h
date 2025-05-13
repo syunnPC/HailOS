@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Common/typelib.h"
-#include "Common/commonlib.h"
+#include "typelib.h"
+#include "commonlib.h"
 
 #define PIXEL_SIZE 4
 

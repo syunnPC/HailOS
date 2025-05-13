@@ -1,12 +1,12 @@
 #include "hailkrnl.h"
-#include "Utility/util.h"
+#include "util.h"
 #include "boot.h"
 #include "init.h"
-#include "Common/commonlib.h"
-#include "Common/typelib.h"
-#include "Common/status.h"
-#include "Vga/vga.h"
-#include "Vga/print.h"
+#include "commonlib.h"
+#include "typelib.h"
+#include "status.h"
+#include "vga.h"
+#include "print.h"
 
 meminfo_t* gMemoryInfo;
 graphic_info_t* gGraphicInfo;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Common/commonlib.h"
-#include "Common/typelib.h"
+#include "commonlib.h"
+#include "typelib.h"
 
 #define MAX_FREE_REGIONS 64
 #define PAGE_SIZE 4096

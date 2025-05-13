@@ -1,58 +1,115 @@
-# ディレクトリ設定
-SRC_DIR := Kernel
-LIB_DIR := Library
-OUT_DIR := build
+# HailOS Makefile
 
-# 共通 C ファイル一覧（interrupt.c は除外）
-C_SOURCES := \
-    $(SRC_DIR)/hailkrnl.c \
-    $(SRC_DIR)/init.c \
-    $(LIB_DIR)/MemoryManager/memmgr.c \
-    $(LIB_DIR)/Utility/util.c \
-    $(LIB_DIR)/Vga/vga.c \
-    $(LIB_DIR)/Vga/print.c
+# --- Toolchain Configuration ---
+# Adjust if your cross-compiler has a different prefix
+TARGET_ARCH = x86_64
+TARGET_TRIPLET = $(TARGET_ARCH)-elf
+CC = $(TARGET_TRIPLET)-gcc
+AS = $(TARGET_TRIPLET)-as
+LD = $(TARGET_TRIPLET)-ld
+OBJCOPY = $(TARGET_TRIPLET)-objcopy
 
-# 割り込みハンドラ用 C ファイル（個別ビルドルールで扱う）
-INTERRUPT_SRC := $(SRC_DIR)/interrupt.c
+# --- Build Directories ---
+BUILD_DIR = Build
+OBJ_DIR = $(BUILD_DIR)/obj
+KERNEL_ELF = $(BUILD_DIR)/kernel.elf
+# KERNEL_BIN = $(BUILD_DIR)/kernel.bin # If you need a raw binary later
 
-# 出力ファイル
-OUTPUT := $(OUT_DIR)/hailos.elf
+# --- Source Directories ---
+KERNEL_SRC_DIR = Kernel
+LIB_COMMON_SRC_DIR = Library/Common
+LIB_MEMMGR_SRC_DIR = Library/MemoryManager
+LIB_UTIL_SRC_DIR = Library/Utility
+LIB_VGA_SRC_DIR = Library/Vga
 
-# コンパイラとリンカ
-CC := gcc
-LD := ld
+# --- Compiler and Linker Flags ---
+# -g: Add debug symbols
+# -ffreestanding: No standard library, no hosted environment
+# -Wall -Wextra: Enable many warnings
+# -mno-red-zone: For kernel code, avoid red zone optimization
+# -mcmodel=kernel: For kernel code, allows symbols to be >2GB apart
+# -fno-pie: Don't produce Position Independent Executables (unless you design for it)
+CFLAGS_COMMON = -g -ffreestanding -Wall -Wextra -mno-red-zone -mcmodel=kernel -fno-pie
+CFLAGS = $(CFLAGS_COMMON)
+ASFLAGS = -g # For 64-bit assembly, -g for debug symbols is sufficient.
 
-# 共通コンパイルフラグ（SSE, MMX 無効、ベクトル最適化禁止）
-CFLAGS := -ffreestanding -O2 -Wall -Wextra -nostdlib \
-          -mno-sse -mno-sse2 -mno-mmx -fno-tree-vectorize \
-          -I$(SRC_DIR) -I$(LIB_DIR)
+# Specific flags for interrupt.c
+CFLAGS_INTERRUPT = $(CFLAGS_COMMON) -mno-80387 -mno-sse -mno-sse2 -mno-mmx -mno-3dnow -mno-avx
 
-# リンカオプション
-LDFLAGS := -Ttext 0x100000 -e main -m elf_x86_64
+# Include paths
+INCLUDES = -I$(KERNEL_SRC_DIR) \
+           -I$(LIB_COMMON_SRC_DIR) \
+           -I$(LIB_MEMMGR_SRC_DIR) \
+           -I$(LIB_UTIL_SRC_DIR) \
+           -I$(LIB_VGA_SRC_DIR)
 
-# オブジェクトファイル一覧（interrupt.c の .o を手動追加）
-OBJ := $(patsubst %.c, $(OUT_DIR)/%.o, $(C_SOURCES)) \
-       $(OUT_DIR)/Kernel/interrupt.o
+# Linker script
+LDSCRIPT = linker.ld
+LDFLAGS = -T $(LDSCRIPT) -nostdlib -n # -n makes text segment read-only (good practice)
 
-# 全体ビルドターゲット
-all: $(OUTPUT)
+# --- Source Files ---
+# Assembly source files (boot.S must be first for ENTRY(_start))
+ASM_SOURCES = $(KERNEL_SRC_DIR)/boot.S
 
-# ELF 出力
-$(OUTPUT): $(OBJ)
-	$(LD) $(LDFLAGS) -o $@ $^
+# C source files
+C_SOURCES = \
+    $(KERNEL_SRC_DIR)/hailkrnl.c \
+    $(KERNEL_SRC_DIR)/init.c \
+    $(LIB_MEMMGR_SRC_DIR)/memmgr.c \
+    $(LIB_UTIL_SRC_DIR)/util.c \
+    $(LIB_VGA_SRC_DIR)/print.c \
+    $(LIB_VGA_SRC_DIR)/vga.c
 
-# 一般的な .c → .o ルール（共通ソース）
-$(OUT_DIR)/%.o: %.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+# Special C source file for interrupts
+C_SOURCE_INTERRUPT = $(KERNEL_SRC_DIR)/interrupt.c
 
-# 割り込みハンドラは FPU 命令も禁止
-$(OUT_DIR)/Kernel/interrupt.o: $(SRC_DIR)/interrupt.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -mno-80387 -c $< -o $@
+# Object files
+OBJ_FILES_ASM = $(patsubst $(KERNEL_SRC_DIR)/%.S,$(OBJ_DIR)/%.o,$(ASM_SOURCES))
+OBJ_FILES_C = $(patsubst %.c,$(OBJ_DIR)/%.o,$(filter-out $(C_SOURCE_INTERRUPT),$(C_SOURCES)))
+OBJ_FILE_INTERRUPT = $(patsubst %.c,$(OBJ_DIR)/%.o,$(C_SOURCE_INTERRUPT))
 
-# クリーンターゲット
-clean:
-	rm -rf $(OUT_DIR)
+ALL_OBJS = $(OBJ_FILES_ASM) $(OBJ_FILES_C) $(OBJ_FILE_INTERRUPT)
 
+# --- Build Rules ---
+all: $(KERNEL_ELF)
+
+$(KERNEL_ELF): $(ALL_OBJS) $(LDSCRIPT)
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(ALL_OBJS) -lgcc
+	@echo "LD   $@"
+
+# Rule for general C files
+$(OBJ_DIR)/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	@echo "CC   $@"
+
+# Specific rule for interrupt.c
+$(OBJ_FILE_INTERRUPT): $(C_SOURCE_INTERRUPT)
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS_INTERRUPT) $(INCLUDES) -c $< -o $@
+	@echo "CC-INT $@"
+
+# Rule for assembly files
+$(OBJ_DIR)/%.o: $(KERNEL_SRC_DIR)/%.S
+	@mkdir -p $(@D)
+	# Use $(CC) to invoke the assembler. It will pass its default target (x86_64)
+	# and can handle C preprocessor directives if you use .S (capital S)
+	$(CC) $(ASFLAGS) $(INCLUDES) -c $< -o $@
+	@echo "AS   $@"
+
+# Optional: Create a raw binary (e.g., for some bootloaders or emulators)
+# $(KERNEL_BIN): $(KERNEL_ELF)
+# 	$(OBJCOPY) -O binary $< $@
+# 	@echo "OBJCOPY $@"
+
+# --- phony targets ---
 .PHONY: all clean
+
+clean:
+	@echo "Cleaning build files..."
+	rm -rf $(BUILD_DIR)
+
+# Debug: print variables
+print-%:
+	@echo '$*=$($*)'
