@@ -7,7 +7,11 @@
 #define ATA_DRIVE_SELECT    0x1F6
 #define ATA_COMMAND_PORT    0x1F7
 #define ATA_STATUS_PORT     0x1F7
+#define AtA_CTRL_BASE       0x3F6
 
 #define ATA_CMD_READ_SECTORS 0x20
 #define ATA_STATUS_BSY  0x80
 #define ATA_STATUS_DRQ  0x08
+
+void AtaReadSectorLba28(u32, u8*);
+void AtaReadSectorLba48(u64, u8*);

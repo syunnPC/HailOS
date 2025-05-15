@@ -1,10 +1,12 @@
 #include "print.h"
 #include "charset.h"
 #include "typelib.h"
-#include "hailkrnl.h"
+
+extern graphic_info_t* gGraphicInfo;
 
 void PrintChar(char Ch, coordinate2D_t Location, rgbcolor_t Color)
 {
+    /*
     if ((u8)Ch < 0x20 || (u8)Ch > 0x7E)
     {
         return;
@@ -26,10 +28,12 @@ void PrintChar(char Ch, coordinate2D_t Location, rgbcolor_t Color)
             }
         }
     }
+    */
 }
 
 void PrintString(const char* Str, coordinate2D_t Location, rgbcolor_t Color)
 {
+    /*
     i64 startX = Location.X;
     i64 x = Location.X;
     i64 y = Location.Y;
@@ -64,6 +68,7 @@ void PrintString(const char* Str, coordinate2D_t Location, rgbcolor_t Color)
             break;
         }
     }
+    */
 }
 
 void Fill(rgbcolor_t Color)

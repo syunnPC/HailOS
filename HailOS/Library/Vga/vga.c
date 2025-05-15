@@ -1,7 +1,8 @@
 #include "vga.h"
 #include "util.h"
 #include "status.h"
-#include "hailkrnl.h"
+
+extern graphic_info_t* gGraphicInfo;
 
 framebuffer_color_t ConvertColor(rgbcolor_t Color)
 {

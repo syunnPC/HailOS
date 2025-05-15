@@ -3,7 +3,10 @@
 #include "commonlib.h"
 #include "iomgr.h"
 
-void AtaReadSectorLBA28(u32 Lba, u8* Buffer)
+/// @brief 
+/// @param Lba 
+/// @param Buffer Must have 512 byte length.
+void AtaReadSectorLba28(u32 Lba, u8* Buffer)
 {
     if(Buffer == NULL)
     {
@@ -37,4 +40,10 @@ void AtaReadSectorLBA28(u32 Lba, u8* Buffer)
         Buffer[i * 2] = (u8)(Word & 0xFF);
         Buffer[i * 2 + 1] = (u8)((Word >> 8) & 0xFF);
     }
+}
+
+void AtaReadSectorLba48(u64 Lba, u8* Buffer)
+{
+    //Not implemented
+    return;
 }
