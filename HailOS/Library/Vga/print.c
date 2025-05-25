@@ -6,13 +6,12 @@ extern graphic_info_t* gGraphicInfo;
 
 void PrintChar(char Ch, coordinate2D_t Location, rgbcolor_t Color)
 {
-    /*
     if ((u8)Ch < 0x20 || (u8)Ch > 0x7E)
     {
         return;
     }
 
-    const u8* glyph = font8x16[(u8)Ch];
+    const u8* glyph = ascii_font8x16[(u8)Ch];
     for (i32 row = 0; row < FONT_HEIGHT; row++)
     {
         u8 bits = glyph[row];
@@ -28,12 +27,10 @@ void PrintChar(char Ch, coordinate2D_t Location, rgbcolor_t Color)
             }
         }
     }
-    */
 }
 
 void PrintString(const char* Str, coordinate2D_t Location, rgbcolor_t Color)
 {
-    /*
     i64 startX = Location.X;
     i64 x = Location.X;
     i64 y = Location.Y;
@@ -68,7 +65,6 @@ void PrintString(const char* Str, coordinate2D_t Location, rgbcolor_t Color)
             break;
         }
     }
-    */
 }
 
 void Fill(rgbcolor_t Color)

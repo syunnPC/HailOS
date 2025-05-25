@@ -21,6 +21,9 @@ LIB_COMMON_SRC_DIR = Library/Common
 LIB_MEMMGR_SRC_DIR = Library/MemoryManager
 LIB_UTIL_SRC_DIR = Library/Utility
 LIB_VGA_SRC_DIR = Library/Vga
+LIB_DISKIO_SRC_DIR = Library/DiskIo
+LIB_IOMGR_SRC_DIR = Library/IoManager
+LIB_STDC_SRC_DIR = Library/Stdc
 
 # --- Compiler and Linker Flags ---
 # -g: Add debug symbols
@@ -41,7 +44,10 @@ INCLUDES = -I$(KERNEL_SRC_DIR) \
            -I$(LIB_COMMON_SRC_DIR) \
            -I$(LIB_MEMMGR_SRC_DIR) \
            -I$(LIB_UTIL_SRC_DIR) \
-           -I$(LIB_VGA_SRC_DIR)
+           -I$(LIB_VGA_SRC_DIR) \
+		   -I$(LIB_DISKIO_SRC_DIR) \
+		   -I$(LIB_IOMGR_SRC_DIR) \
+		   -I$(LIB_STDC_SRC_DIR)
 
 # Linker script
 LDSCRIPT = linker.ld
@@ -58,7 +64,13 @@ C_SOURCES = \
     $(LIB_MEMMGR_SRC_DIR)/memmgr.c \
     $(LIB_UTIL_SRC_DIR)/util.c \
     $(LIB_VGA_SRC_DIR)/print.c \
-    $(LIB_VGA_SRC_DIR)/vga.c
+    $(LIB_VGA_SRC_DIR)/vga.c \
+	$(LIB_VGA_SRC_DIR)/bitmap.c \
+	$(LIB_STDC_SRC_DIR)/string.c \
+	$(LIB_STDC_SRC_DIR)/assert.c \
+	$(LIB_IOMGR_SRC_DIR)/iomgr.c \
+	$(LIB_DISKIO_SRC_DIR)/ata.c \
+	$(LIB_DISKIO_SRC_DIR)/fat32.c
 
 # Special C source file for interrupts
 C_SOURCE_INTERRUPT = $(KERNEL_SRC_DIR)/interrupt.c

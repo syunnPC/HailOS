@@ -13,5 +13,7 @@
 #define ATA_STATUS_BSY  0x80
 #define ATA_STATUS_DRQ  0x08
 
+#include "typelib.h"
+
 void AtaReadSectorLba28(u32, u8*);
 void AtaReadSectorLba48(u64, u8*);

@@ -1,7 +1,8 @@
+#include "iomgr.h"
 #include "ata.h"
 #include "typelib.h"
 #include "commonlib.h"
-#include "iomgr.h"
+#include "status.h"
 
 /// @brief 
 /// @param Lba 
@@ -45,5 +46,5 @@ void AtaReadSectorLba28(u32 Lba, u8* Buffer)
 void AtaReadSectorLba48(u64 Lba, u8* Buffer)
 {
     //Not implemented
-    return;
+    PANIC(STATUS_NOT_IMPLEMENTED, 0);
 }

@@ -23,7 +23,7 @@ typedef struct
 
 typedef struct
 {
-    char Signature[8];
+    u64 Signature;
     u32 Revsion;
     u32 HeaderSize;
     u32 HeaderCrc32;
@@ -91,7 +91,7 @@ void ReadCluster(u32, void*);
 u32 GetNextCluster(u32);
 boolean CompareFileName(const u8*, const char*);
 
-boolean ReadFile(const char*, void*, size_t, size_t*);
+HOSstatus ReadFile(const char*, void*, size_t, size_t*);
 boolean FindFat32Partition(u64*);
 void InitVbr();
 

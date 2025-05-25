@@ -38,7 +38,7 @@ void* memcpy(void* Dest, const void* Src, size_t Size)
     return Dest;
 }
 
-boolean memcmp(void* Buf1, void* Buf2, size_t BufSize)
+boolean memcmp(const void* Buf1, const void* Buf2, size_t BufSize)
 {
     if(BufSize == 0)
     {
@@ -93,4 +93,62 @@ void* memset(void* Dest, char Ch, size_t Count)
     }
 
     return Dest;
+}
+
+boolean strncmp(const char* Str1, const char* Str2, size_t Count)
+{
+
+    if(Str1 == NULL || Str2 == NULL)
+    {
+        return false;
+    }
+
+    size_t lenStr1 = strlen(Str1);
+    size_t lenStr2 = strlen(Str2);
+
+    if(lenStr1 < Count || lenStr2 < Count)
+    {
+        Count = (lenStr1 < lenStr2 ? lenStr1 : lenStr2);
+    }
+
+    return memcmp(Str1, Str2, Count);
+}
+
+char* strstr(char* Str1, const char* Str2)
+{
+    char* result = NULL;
+    if(strlen(Str1) < strlen(Str2))
+    {
+        return result;
+    }
+
+    boolean Success = true;
+
+    for(size_t i=0; i<strlen(Str1); i++)
+    {
+        if(Str1[i] == Str2[0])
+        {
+            result = &Str1[i];
+            if(i + strlen(Str2) - 1 > strlen(Str2))
+            {
+                return NULL;
+            }
+
+            for(size_t j=0; j<strlen(Str2); j++)
+            {
+                if(Str1[j+i] != Str2[j])
+                {
+                    Success = false;
+                    break;
+                }
+            }
+
+            if(Success)
+            {
+                return result;
+            }
+        }
+    }
+
+    return NULL;
 }

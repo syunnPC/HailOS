@@ -1,4 +1,5 @@
 #include "fat32.h"
+#include "iomgr.h"
 #include "ata.h"
 #include "typelib.h"
 #include "commonlib.h"
@@ -25,7 +26,7 @@ void ReadCluster(u32 ClusterNum, void* Buffer)
     u32 FirstLba = ClusterStartLba + (ClusterNum - 2) * SectorsPerCluster;
     for(u32 i=0; i<SectorsPerCluster; i++)
     {
-        AtaReadSectorLBA28((u32)FirstLba+i, (u8*)Buffer + (i*SECTOR_SIZE));
+        AtaReadSectorLba28((u32)FirstLba+i, (u8*)Buffer + (i*SECTOR_SIZE));
     }
 }
 
@@ -73,7 +74,7 @@ boolean CompareFileName(const u8* FatName, const char* Target)
     return true;
 }
 
-boolean ReadFile(const char* FileName, void* OutBuffer, size_t MaxSize, size_t* OutSize)
+HOSstatus ReadFile(const char* FileName, void* OutBuffer, size_t MaxSize, size_t* OutSize)
 {
     SectorsPerCluster = Vbr.SectorsPerCluster;
     FatStartLba = Fat32BaseLba + Vbr.ReservedSectorCount;
@@ -87,10 +88,10 @@ boolean ReadFile(const char* FileName, void* OutBuffer, size_t MaxSize, size_t* 
     {
         ReadCluster(CurrentCluster, ClusterBuf);
 
-        for(int i=0; i<(SectorsPerCluster * SECTOR_SIZE); i+=32)
+        for(u32 i=0; i<(SectorsPerCluster * SECTOR_SIZE); i+=32)
         {
             u8* Entry = &ClusterBuf[i];
-            if(Entry[0] == 0x00) return false;
+            if(Entry[0] == 0x00) return STATUS_ERROR;
             if(Entry[0] == 0xE5) continue;
             if(Entry[11] & 0x08) continue;
 
@@ -116,20 +117,20 @@ boolean ReadFile(const char* FileName, void* OutBuffer, size_t MaxSize, size_t* 
                     FileCluster = GetNextCluster(FileCluster);
                 }
 
-                return true;
+                return STATUS_SUCCESS;
             }
         }
 
         CurrentCluster = GetNextCluster(CurrentCluster);
     }
 
-    return false;
+    return STATUS_ERROR;
 }
 
 boolean FindFat32Partition(u64* OutLba)
 {
     gpt_header_t Header;
-    AtaReadSectorLba28(1, &Header);
+    AtaReadSectorLba28(1, (u8*)&Header);
 
     if(Header.Signature != GPT_SIGNATURE)
     {
@@ -143,7 +144,7 @@ boolean FindFat32Partition(u64* OutLba)
     gpt_entry_t Entry;
     for(u32 i = 0; i<EntryCount; i++)
     {
-        AtaReadSectorLba28(EntryLba+(i*EntrySize)/512, &Entry);
+        AtaReadSectorLba28(EntryLba+(i*EntrySize)/512, (u8*)&Entry);
         char Name[37];
         for(int j=0; j<36; j++)
         {
@@ -167,5 +168,5 @@ void InitVbr()
     {
         Panic(STATUS_NOT_FOUND, 0, __LINE__);
     }
-    AtaReadSectorLba28(Fat32BaseLba, &Vbr);
+    AtaReadSectorLba28(Fat32BaseLba, (u8*)&Vbr);
 }
