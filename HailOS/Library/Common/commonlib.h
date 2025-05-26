@@ -4,12 +4,12 @@
 #define NORETURN __attribute__((noreturn))
 #endif
 
-#ifndef PACKED_STRUCTURE // Consistent naming with your usage
+#ifndef PACKED_STRUCTURE
 #define PACKED_STRUCTURE __attribute__((packed))
 #endif
 
 #ifndef NULL
-#define NULL ((void*)0) // Cast to void*
+#define NULL ((void*)0)
 #endif
 
 #define SI_KI 1024

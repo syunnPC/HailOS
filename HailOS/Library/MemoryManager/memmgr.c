@@ -1,7 +1,7 @@
 #include "memmgr.h"
 #include "typelib.h"
 
-extern meminfo_t* gMemoryInfo;
+meminfo_t* gMemoryInfo;
 
 void* KernelAlloc(size_t Size)
 {
@@ -34,4 +34,17 @@ void* KernelAlloc(size_t Size)
     }
 
     return NULL;
+}
+
+void KernelFree(void* Addr, size_t Size)
+{
+    if(Addr == NULL || Size == 0)
+    {
+        return;
+    }
+
+    if(gMemoryInfo->FreeRegionCount < MAX_FREE_REGIONS)
+    {
+        gMemoryInfo->FreeMemory[gMemoryInfo->FreeRegionCount++] = (freeregion_t){.Base = (u64)Addr, .Length = Size};
+    }
 }

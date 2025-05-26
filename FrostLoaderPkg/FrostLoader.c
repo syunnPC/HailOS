@@ -3,6 +3,9 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
+#include <Library/PerformanceLib.h>
+#include <Library/TimerLib.h>
 #include <Protocol/SimpleFileSystem.h>
 #include <Protocol/LoadedImage.h>
 #include <Guid/FileInfo.h>
@@ -145,10 +148,18 @@ typedef struct
 
 typedef struct
 {
+    u64 InitialUnixTime;
+    u64 InitialTsc;
+    u64 TscFreq;
+}PACKED_STRUCTURE hwclockinfo_t;
+
+typedef struct
+{
     UINTN Argc;
     char8** Args;
     meminfo_t* MemoryInfo;
     graphic_info_t* GraphicInfo;
+    hwclockinfo_t* ClockInfo;
 } PACKED_STRUCTURE bootinfo_t;
 
 typedef void(*kernel_entrypoint_t)(bootinfo_t*);
@@ -156,6 +167,55 @@ typedef void(*kernel_entrypoint_t)(bootinfo_t*);
 boolean IsInitialized = FALSE;
 graphic_info_t gGraphicInfo;
 meminfo_t gMemoryInfo;
+hwclockinfo_t gHwClockInfo;
+
+#define SEC_PER_MIN   ((UINTN)    60)
+#define SEC_PER_HOUR  ((UINTN)  3600)
+#define SEC_PER_DAY   ((UINTN) 86400)
+#define EPOCH_JULIAN_DATE  2440588
+
+//From github: TimeBaseLib.h impl
+
+UINTN
+EFIAPI
+EfiGetEpochDays (
+  IN  EFI_TIME  *Time
+  )
+{
+  UINTN  a;
+  UINTN  y;
+  UINTN  m;
+  UINTN  JulianDate; // Absolute Julian Date representation of the supplied Time
+  UINTN  EpochDays;  // Number of days elapsed since EPOCH_JULIAN_DAY
+
+  a = (14 - Time->Month) / 12;
+  y = Time->Year + 4800 - a;
+  m = Time->Month + (12*a) - 3;
+
+  JulianDate = Time->Day + ((153*m + 2)/5) + (365*y) + (y/4) - (y/100) + (y/400) - 32045;
+
+  EpochDays = JulianDate - EPOCH_JULIAN_DATE;
+
+  return EpochDays;
+}
+
+UINTN
+EFIAPI
+EfiTimeToEpoch (
+  IN  EFI_TIME  *Time
+  )
+{
+  UINTN  EpochDays;  // Number of days elapsed since EPOCH_JULIAN_DAY
+  UINTN  EpochSeconds;
+
+  EpochDays = EfiGetEpochDays (Time);
+
+  EpochSeconds = (EpochDays * SEC_PER_DAY) + ((UINTN)Time->Hour * SEC_PER_HOUR) + (Time->Minute * SEC_PER_MIN) + Time->Second;
+
+  return EpochSeconds;
+}
+
+//end cite
 
 NORETURN void HaltProcessor(void)
 {
@@ -339,7 +399,8 @@ EFI_STATUS InitializeGraphics(void)
     gGraphicInfo.FrameBufferBase = Gop->Mode->FrameBufferBase;
     gGraphicInfo.FrameBufferSize = Gop->Mode->FrameBufferSize;
     gGraphicInfo.HorizontalResolution = Gop->Mode->Info->HorizontalResolution;
-    gGraphicInfo.VerticalResolution = Gop->Mode->Info->PixelsPerScanLine;
+    gGraphicInfo.VerticalResolution = Gop->Mode->Info->VerticalResolution;
+    gGraphicInfo.PixelsPerScanLine = Gop->Mode->Info->PixelsPerScanLine;
     Status = EFI_SUCCESS;
     
     switch(Gop->Mode->Info->PixelFormat)
@@ -438,6 +499,13 @@ void ParseFreeMemory(EFI_MEMORY_DESCRIPTOR* MemoryMap, UINTN MemoryMapSize, UINT
     }
 }
 
+u64 ReadTsc(void)
+{
+    u32 lo, hi;
+    asm volatile("rdtsc" : "=a"(lo), "=d"(hi));
+    return ((u64)hi<<32) | lo;
+}
+
 EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable)
 {
     Print(L"FrostLoader version 0.2\n\n");
@@ -449,7 +517,9 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
     UINTN MapKey = 0;
     UINTN DescriptorSize = 0;
     UINT32 DescriptorVesion = 0;
-    bootinfo_t BootInfo = {0, NULL, &gMemoryInfo, &gGraphicInfo};
+    EFI_TIME CurrentTime;
+    u64 Start, End;
+    bootinfo_t BootInfo = {0, NULL, &gMemoryInfo, &gGraphicInfo, &gHwClockInfo};
 
     Print(L"Initializing graphics... ");
     Status = InitializeGraphics();
@@ -462,6 +532,18 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
 
     Print(L"Frame buffer base: 0x%lx, size: 0x%lx\n", gGraphicInfo.FrameBufferBase, gGraphicInfo.FrameBufferSize);
     Print(L"Resolution: %ux%u, PPSL: %u, Format: %d\n", gGraphicInfo.HorizontalResolution, gGraphicInfo.VerticalResolution, gGraphicInfo.PixelsPerScanLine, gGraphicInfo.PixelFormat);
+
+    Print(L"Initializing hardware clock...");
+    gRT->GetTime(&CurrentTime, NULL);
+    gHwClockInfo.InitialUnixTime = EfiTimeToEpoch(&CurrentTime);
+    gHwClockInfo.InitialTsc = ReadTsc();
+    Start = ReadTsc();
+    gBS->Stall(1000000);
+    End = ReadTsc();
+    gHwClockInfo.TscFreq = End - Start;
+    Print(L"done.\n");
+
+    Print(L"Current UNIX time: %lu, Initial TSC: %lu, TSC Freq: %lu\n", gHwClockInfo.InitialUnixTime, gHwClockInfo.InitialTsc, gHwClockInfo.TscFreq);
 
     if(gGraphicInfo.PixelFormat == PIXELFORMAT_INVALID)
     {
@@ -502,10 +584,10 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
         if(MemoryMap == NULL)
         {
             Print(L"failed.\n");
-            Panic(Status, 0, __LINE__);
+            Panic(Status, 1, __LINE__);
         }
 
-        Status = gBS->GetMemoryMap(&MemoryMapSize, NULL, &MapKey, &DescriptorSize, &DescriptorVesion);
+        Status = gBS->GetMemoryMap(&MemoryMapSize, MemoryMap, &MapKey, &DescriptorSize, &DescriptorVesion);
 
         if(EFI_ERROR(Status))
         {

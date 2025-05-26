@@ -2,7 +2,9 @@
 #include "util.h"
 #include "status.h"
 
-extern graphic_info_t* gGraphicInfo;
+graphic_info_t* gGraphicInfo;
+
+boolean gGraphicAvailable;
 
 framebuffer_color_t ConvertColor(rgbcolor_t Color)
 {

@@ -4,6 +4,11 @@
 
 extern graphic_info_t* gGraphicInfo;
 
+static const int DEFAULT_CONSOLE_OFFSET_X = 0;
+static const int DEFAULT_CONSOLE_OFFSET_Y = 0;
+
+static coordinate2D_t CurrentPosition = {.X = DEFAULT_CONSOLE_OFFSET_X, .Y = DEFAULT_CONSOLE_OFFSET_Y};
+
 void PrintChar(char Ch, coordinate2D_t Location, rgbcolor_t Color)
 {
     if ((u8)Ch < 0x20 || (u8)Ch > 0x7E)
@@ -27,6 +32,45 @@ void PrintChar(char Ch, coordinate2D_t Location, rgbcolor_t Color)
             }
         }
     }
+}
+
+void PrintStringInAutoFormat(const char* Str, rgbcolor_t Color)
+{
+    i64 x = CurrentPosition.X;
+    i64 y = CurrentPosition.Y;
+
+    while(*Str)
+    {
+        char ch = *Str++;
+        if(ch == '\r')
+        {
+            x = DEFAULT_CONSOLE_OFFSET_X;
+        }
+        else if(ch == '\n')
+        {
+            y += FONT_HEIGHT;
+        }
+        else
+        {
+            coordinate2D_t pos = {x, y};
+            PrintChar(ch, pos, Color);
+            x+=FONT_WIDTH;
+        }
+
+        if (x + FONT_WIDTH > (i64)gGraphicInfo->HorizontalResolution)
+        {
+            x = DEFAULT_CONSOLE_OFFSET_X;
+            y += FONT_HEIGHT;
+        }
+
+        if (y + FONT_HEIGHT > (i64)gGraphicInfo->VerticalResolution)
+        {
+            break;
+        }
+    }
+
+    CurrentPosition.X = x;
+    CurrentPosition.Y = y;
 }
 
 void PrintString(const char* Str, coordinate2D_t Location, rgbcolor_t Color)
@@ -65,6 +109,9 @@ void PrintString(const char* Str, coordinate2D_t Location, rgbcolor_t Color)
             break;
         }
     }
+
+    CurrentPosition.X = x;
+    CurrentPosition.Y = y;
 }
 
 void Fill(rgbcolor_t Color)

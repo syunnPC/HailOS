@@ -1,6 +1,9 @@
 #include "string.h"
 #include "typelib.h"
 #include "commonlib.h"
+#include "memmgr.h"
+#include "util.h"
+#include "status.h"
 
 size_t strlen(const char* Str)
 {
@@ -151,4 +154,108 @@ char* strstr(char* Str1, const char* Str2)
     }
 
     return NULL;
+}
+
+char* nstd_strcat_s(const char* Str1, const char* Str2)
+{
+    if(Str1 == NULL || Str2 == NULL)
+    {
+        return NULL;
+    }
+
+    char* result = KernelAlloc(strlen(Str1)+strlen(Str2)+1);
+    if(result == NULL)
+    {
+        return NULL;
+    }
+
+    memcpy(result, Str1, strlen(Str1));
+    memcpy(result+strlen(Str1), Str2, strlen(Str2)+1);
+
+    return result;
+}
+
+char* itos(i64 n)
+{
+    char* result;
+    char buf[21];
+    int i=0;
+    boolean isNegative = false;
+
+    if(n == 0)
+    {
+        result = KernelAlloc(2);
+        result[0] = '0';
+        result[1] = '\0';
+        return result;
+    }
+
+    if(n < 0)
+    {
+        isNegative = true;
+        if(n == -9223372036854775807-1)
+        {
+            const char* min = "9223372036854775808";
+            memcpy(buf, min, strlen(min));
+        }
+        else
+        {
+            n = -n;
+        }
+    }
+
+    if(n != -9223372036854775807-1)
+    {
+        while(n > 0)
+        {
+            buf[i++] = (n  % 10) + '0';
+            n /= 10;
+        }
+    }
+
+    if(isNegative)
+    {
+        buf[i++] = '-';
+    }
+
+    result = KernelAlloc(21);
+
+    for(int j=0; j<i; j++)
+    {
+        result[j] = buf[i-j-1];
+    }
+    result[i] = '\0';
+
+    return result;
+}
+
+char* utos(u64 n)
+{
+    char* result;
+    int i=0;
+    char buf[21];
+
+    if(n == 0)
+    {
+        result = KernelAlloc(2);
+        result[0] = '0';
+        result[1] = '\0';
+        return result;
+    }
+
+    while(n > 0)
+    {
+        buf[i++] = (n  % 10) + '0';
+        n /= 10;
+    }
+
+    result = KernelAlloc(21);
+
+    for(int j=0; j<i; j++)
+    {
+        result[j] = buf[i-j-1];
+    }
+    result[i] = '\0';
+
+    return result;
 }

@@ -4,9 +4,12 @@
 #include "vga.h"
 #include "memmgr.h"
 
-#define KERNEL_FILENAME L"\\kernel.elf"
-#define MAX_FREE_REGIONS 64
-#define PAGE_SIZE 4096
+typedef struct
+{
+    u64 InitialUnixTime;
+    u64 InitialTsc;
+    u64 TscFreq;
+} PACKED_STRUCTURE hwclockinfo_t;
 
 typedef struct
 {
@@ -14,4 +17,5 @@ typedef struct
     char** Args;
     meminfo_t* MemoryInfo;
     graphic_info_t* GraphicInfo;
+    hwclockinfo_t* ClockInfo;
 } PACKED_STRUCTURE bootinfo_t;

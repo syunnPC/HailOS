@@ -69,6 +69,7 @@ C_SOURCES = \
 	$(LIB_STDC_SRC_DIR)/string.c \
 	$(LIB_STDC_SRC_DIR)/assert.c \
 	$(LIB_IOMGR_SRC_DIR)/iomgr.c \
+	$(LIB_IOMGR_SRC_DIR)/timeinfo.c \
 	$(LIB_DISKIO_SRC_DIR)/ata.c \
 	$(LIB_DISKIO_SRC_DIR)/fat32.c
 

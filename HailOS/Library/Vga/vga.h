@@ -41,5 +41,8 @@ typedef struct
     pixelformat_t PixelFormat;
 } PACKED_STRUCTURE graphic_info_t;
 
+extern boolean gGraphicAvailable;
+extern graphic_info_t* gGraphicInfo;
+
 framebuffer_color_t ConvertColor(rgbcolor_t);
 HOSstatus DrawPixel(coordinate2D_t, rgbcolor_t);

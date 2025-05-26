@@ -6,6 +6,7 @@
 void PrintChar(char,coordinate2D_t,rgbcolor_t);
 void PrintString(const char*, coordinate2D_t, rgbcolor_t);
 void Print(const char*);
+void PrintStringInAutoFormat(const char*, rgbcolor_t);
 void Fill(rgbcolor_t);
 void DrawRect(coordinate2D_t, coordinate2D_t, rgbcolor_t);
 void DrawBox(coordinate2D_t,coordinate2D_t,rgbcolor_t);

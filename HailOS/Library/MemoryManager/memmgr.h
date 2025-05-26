@@ -3,7 +3,7 @@
 #include "commonlib.h"
 #include "typelib.h"
 
-#define MAX_FREE_REGIONS 64
+#define MAX_FREE_REGIONS 128
 #define PAGE_SIZE 4096
 
 #define KERNEL_ALLOC_ALIGN 8
@@ -20,4 +20,7 @@ typedef struct
     u64 FreeRegionCount;
 } PACKED_STRUCTURE meminfo_t;
 
+extern meminfo_t* gMemoryInfo;
+
 void* KernelAlloc(size_t);
+void KernelFree(void*, size_t);
