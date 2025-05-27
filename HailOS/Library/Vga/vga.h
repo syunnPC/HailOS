@@ -5,6 +5,13 @@
 
 #define PIXEL_SIZE 4
 
+#define COORD(x, y) ((coordinate2D_t){.X = x, .Y = y})
+
+typedef enum
+{
+    HORIZONTAL_RIGHT, HORIZONTAL_LEFT, VERTICAL_UP, VERTICAL_DOWN
+}Direction;
+
 typedef struct
 {
     u8 Red;
@@ -41,8 +48,20 @@ typedef struct
     pixelformat_t PixelFormat;
 } PACKED_STRUCTURE graphic_info_t;
 
+extern rgbcolor_t gBackgroundColor;
+
 extern boolean gGraphicAvailable;
 extern graphic_info_t* gGraphicInfo;
+extern graphic_info_t gBufferInfo;
+extern framebuffer_color_t NO_TRANSFER_COLOR;
 
+void InitGraphics(graphic_info_t*, rgbcolor_t);
 framebuffer_color_t ConvertColor(rgbcolor_t);
 HOSstatus DrawPixel(coordinate2D_t, rgbcolor_t);
+HOSstatus DrawPixelToBuffer(coordinate2D_t, rgbcolor_t);
+HOSstatus DrawBufferContextToFrameBuffer();
+void CleanBuffer(void);
+void ShiftBufferContext(size_t, Direction);
+rgbcolor_t SetBackgroundColor(rgbcolor_t);
+rgbcolor_t ChangeBackgroundColor(rgbcolor_t);
+void FillScreenWithBackgroundColor(void);

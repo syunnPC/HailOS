@@ -1,5 +1,7 @@
 #include "memmgr.h"
 #include "typelib.h"
+#include "status.h"
+#include "util.h"
 
 meminfo_t* gMemoryInfo;
 
@@ -8,6 +10,11 @@ void* KernelAlloc(size_t Size)
     if(Size == 0)
     {
         return NULL;
+    }
+
+    if(gMemoryInfo == NULL)
+    {
+        PANIC(STATUS_NOT_INITIALIZED, 0);
     }
 
     Size = (Size + KERNEL_ALLOC_ALIGN - 1) & ~(KERNEL_ALLOC_ALIGN - 1);
@@ -33,7 +40,7 @@ void* KernelAlloc(size_t Size)
         return Allocated;
     }
 
-    return NULL;
+    PANIC(STATUS_NO_MEMORY_AVAILABLE, gMemoryInfo->FreeRegionCount);
 }
 
 void KernelFree(void* Addr, size_t Size)
@@ -47,4 +54,25 @@ void KernelFree(void* Addr, size_t Size)
     {
         gMemoryInfo->FreeMemory[gMemoryInfo->FreeRegionCount++] = (freeregion_t){.Base = (u64)Addr, .Length = Size};
     }
+}
+
+void InitMemoryManager(meminfo_t* MemInfo)
+{
+    if(MemInfo == NULL)
+    {
+        Reboot();
+    }
+
+    gMemoryInfo = MemInfo;
+}
+
+size_t GetTotalFreeMemory(void)
+{
+    size_t result;
+    for(size_t i=0; i<gMemoryInfo->FreeRegionCount; i++)
+    {
+        result += gMemoryInfo->FreeMemory[i].Length;
+    }
+
+    return result;
 }

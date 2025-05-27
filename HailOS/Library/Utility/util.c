@@ -6,6 +6,7 @@
 #include "stdcolor.h"
 #include "timeinfo.h"
 #include "string.h"
+#include "vga.h"
 
 HOSstatus gLastStatus;
 
@@ -19,18 +20,22 @@ NORETURN void HaltProcessor(void)
 
 NORETURN void Panic(u32 Code, u32 Param1, u32 Param2)
 {
-    Fill((rgbcolor_t){.Red = 41, .Green = 152, .Blue = 240});
     if(!gGraphicAvailable)
     {
         HaltProcessor();
     }
-    PrintString("System Error\r\nStatus: ", (coordinate2D_t){.X = 0, .Y = 0}, COLOR_WHITE);
-    PrintStringInAutoFormat(utos(Code), COLOR_WHITE);
-    PrintStringInAutoFormat(" Param1: ", COLOR_WHITE);
-    PrintStringInAutoFormat(utos(Param1), COLOR_WHITE);
-    PrintStringInAutoFormat(" Param2: ", COLOR_WHITE);
-    PrintStringInAutoFormat(utos(Param2), COLOR_WHITE);
-    PrintStringInAutoFormat("\r\nSystem halted.", COLOR_WHITE);
+    
+    CleanBuffer();
+    SetBackgroundColor(COLOR_BLUE);
+    FillScreenWithBackgroundColor();
+    SetCursorPos(COORD(0, 0));
+    PUTS("System Error\r\nStatus: ");
+    PUTS(utos(Code));
+    PUTS(" Param1: ");
+    PUTS(utos(Param1));
+    PUTS(" Param2: ");
+    PUTS(utos(Param2));
+    PUTS("\r\nSystem halted.");
     HaltProcessor();
 }
 

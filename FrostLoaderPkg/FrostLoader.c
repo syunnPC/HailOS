@@ -528,6 +528,11 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
         Print(L"failed.\n");
         Panic(Status, 0, __LINE__);
     }
+    if(gGraphicInfo.PixelFormat == PIXELFORMAT_INVALID)
+    {
+        Print(L"Unsupported pixel format detected!\n");
+        Panic(STATUS_UNSUPPORTED, (u64)gGraphicInfo.PixelFormat, __LINE__);
+    }
     Print(L"done.\n");
 
     Print(L"Frame buffer base: 0x%lx, size: 0x%lx\n", gGraphicInfo.FrameBufferBase, gGraphicInfo.FrameBufferSize);
@@ -543,12 +548,7 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
     gHwClockInfo.TscFreq = End - Start;
     Print(L"done.\n");
 
-    Print(L"Current UNIX time: %lu, Initial TSC: %lu, TSC Freq: %lu\n", gHwClockInfo.InitialUnixTime, gHwClockInfo.InitialTsc, gHwClockInfo.TscFreq);
-
-    if(gGraphicInfo.PixelFormat == PIXELFORMAT_INVALID)
-    {
-        Panic(EFI_UNSUPPORTED, 0, __LINE__);
-    }
+    Print(L"Current UNIX time: %lu, Initial TSC: %lu, TSC Freq: %lu MHz\n", gHwClockInfo.InitialUnixTime, gHwClockInfo.InitialTsc, gHwClockInfo.TscFreq/(1000*1000));
 
     Print(L"Loading kernel '%s'... ", KERNEL_FILENAME);
     Status = PrepareElfExecutable(KERNEL_FILENAME, &EntryPoint);

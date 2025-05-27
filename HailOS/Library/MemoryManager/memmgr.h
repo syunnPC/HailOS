@@ -3,7 +3,7 @@
 #include "commonlib.h"
 #include "typelib.h"
 
-#define MAX_FREE_REGIONS 128
+#define MAX_FREE_REGIONS 64
 #define PAGE_SIZE 4096
 
 #define KERNEL_ALLOC_ALIGN 8
@@ -24,3 +24,5 @@ extern meminfo_t* gMemoryInfo;
 
 void* KernelAlloc(size_t);
 void KernelFree(void*, size_t);
+void InitMemoryManager(meminfo_t*);
+size_t GetTotalFreeMemory(void);

@@ -12,9 +12,9 @@
 #define NULL ((void*)0)
 #endif
 
-#define SI_KI 1024
-#define SI_MI 1024*SI_KI
-#define SI_GI 1024*SI_MI
+#define SI_KI (1024)
+#define SI_MI (1024*SI_KI)
+#define SI_GI (1024*SI_MI)
 
 extern void Panic(unsigned int, unsigned int, unsigned int);
 
