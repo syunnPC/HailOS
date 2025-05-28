@@ -263,3 +263,8 @@ void SetCursorPos(coordinate2D_t Location)
 {
     CurrentPosition = Location;
 }
+
+coordinate2D_t GetCurrentCursorPos(void)
+{
+    return CurrentPosition;
+}

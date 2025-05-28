@@ -71,7 +71,9 @@ C_SOURCES = \
 	$(LIB_IOMGR_SRC_DIR)/iomgr.c \
 	$(LIB_IOMGR_SRC_DIR)/timeinfo.c \
 	$(LIB_DISKIO_SRC_DIR)/ata.c \
-	$(LIB_DISKIO_SRC_DIR)/fat32.c
+	$(LIB_DISKIO_SRC_DIR)/fat32.c \
+	$(LIB_DISKIO_SRC_DIR)/fileio.c \
+	$(LIB_STDC_SRC_DIR)/stdio.c
 
 # Special C source file for interrupts
 C_SOURCE_INTERRUPT = $(KERNEL_SRC_DIR)/interrupt.c

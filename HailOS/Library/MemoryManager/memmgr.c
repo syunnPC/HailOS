@@ -68,7 +68,7 @@ void InitMemoryManager(meminfo_t* MemInfo)
 
 size_t GetTotalFreeMemory(void)
 {
-    size_t result;
+    size_t result = 0;
     for(size_t i=0; i<gMemoryInfo->FreeRegionCount; i++)
     {
         result += gMemoryInfo->FreeMemory[i].Length;

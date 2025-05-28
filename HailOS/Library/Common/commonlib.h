@@ -13,8 +13,11 @@
 #endif
 
 #define SI_KI (1024)
-#define SI_MI (1024*SI_KI)
-#define SI_GI (1024*SI_MI)
+#define SI_MI (1024*1024)
+#define SI_GI (1024*1024*1024)
+#define SI_KILO (1000)
+#define SI_MEGA (1000*1000)
+#define SI_GIGA (1000*1000*1000)
 
 extern void Panic(unsigned int, unsigned int, unsigned int);
 
