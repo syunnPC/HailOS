@@ -54,9 +54,16 @@ NORETURN void Reboot(void)
     );
 }
 
-void Wait(int Seconds)
+void Wait(u64 Seconds)
 {
-    u64 start = ReadTsc();
-    u64 endTsc = start + (Seconds * gHwClockInfo->TscFreq);
-    while(ReadTsc() < endTsc);
+    u64 Start = ReadTsc();
+    u64 EndTsc = Start + (Seconds * gHwClockInfo->TscFreq);
+    while(ReadTsc() < EndTsc);
+}
+
+void Sleep(u64 Miliseconds)
+{
+    u64 Start = ReadTsc();
+    u64 EndTsc = Start + (gHwClockInfo->TscFreq * (Miliseconds / 1000));
+    while(ReadTsc() < EndTsc);
 }

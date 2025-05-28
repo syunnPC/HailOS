@@ -2,7 +2,7 @@
 
 #include "vga.h"
 
-#define RGB_COLOR(r, g, b) = (rgbcolor_t){.Red = r, .Blue = g, .Green = b}
+#define RGB_COLOR(r, g, b) (rgbcolor_t){.Red = r, .Green = g, .Blue = b}
 #define COLOR_RED  (rgbcolor_t){.Red = 255, .Blue = 0, .Green = 0}
 #define COLOR_BLUE (rgbcolor_t){.Red = 0, .Blue = 255, .Green = 0}
 #define COLOR_LIME (rgbcolor_t){.Red = 0, .Blue = 0, .Green = 255}

@@ -53,7 +53,7 @@ extern rgbcolor_t gBackgroundColor;
 extern boolean gGraphicAvailable;
 extern graphic_info_t* gGraphicInfo;
 extern graphic_info_t gBufferInfo;
-extern framebuffer_color_t NO_TRANSFER_COLOR;
+extern const framebuffer_color_t NO_TRANSFER_COLOR;
 
 void InitGraphics(graphic_info_t*, rgbcolor_t);
 framebuffer_color_t ConvertColor(rgbcolor_t);
@@ -65,3 +65,4 @@ void ShiftBufferContext(size_t, Direction);
 rgbcolor_t SetBackgroundColor(rgbcolor_t);
 rgbcolor_t ChangeBackgroundColor(rgbcolor_t);
 void FillScreenWithBackgroundColor(void);
+rgbcolor_t ConvertColorReverse(framebuffer_color_t);

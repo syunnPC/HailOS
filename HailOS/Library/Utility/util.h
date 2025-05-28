@@ -7,6 +7,7 @@ NORETURN void HaltProcessor(void);
 NORETURN void Panic(u32, u32, u32);
 NORETURN void Reboot(void);
 
-void Wait(int);
+void Wait(u64);
+void Sleep(u64);
 
 extern HOSstatus gLastStatus;

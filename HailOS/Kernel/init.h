@@ -5,6 +5,9 @@
 #include "typelib.h"
 #include "status.h"
 
+#define IRQ_IDT(x) 32+x
+#define IRQ_KEYBOARD 1
+
 extern gdt_entry_t gGDT[GDT_ENTRIES];
 extern gdtr_t gGDTR;
 extern idt_entry_t gIDT[IDT_ENTRIES];
@@ -29,6 +32,7 @@ INTERRUPT void IsrInvalidOpcode(void*);
 INTERRUPT void IsrDoubleFault(void*, u64);
 INTERRUPT void IsrGPF(void*, u64);
 INTERRUPT void IsrPageFault(void*, u64);
+__attribute__((naked)) void IsrKeyboard(void);
 
 void SetIDTEntry(int, void*, u8);
 void InitIDT(void);

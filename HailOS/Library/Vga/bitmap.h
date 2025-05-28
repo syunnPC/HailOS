@@ -1,7 +1,15 @@
 #include "commonlib.h"
 #include "typelib.h"
+#include "vga.h"
 
-HOSstatus DrawBitmap(const char*);
+HOSstatus DrawBitmap(const char*, coordinate2D_t);
+
+#define BI_RGB 0
+#define BI_RLE8 1
+#define BI_RLE4 2
+#define BI_BITFIELDS 3
+#define BI_JPEG 4
+#define BI_PNG 5
 
 typedef struct
 {
@@ -16,7 +24,7 @@ typedef struct
 {
     u32 bcSize;
     u32 bcWidth;
-    u32 bcHeight;
+    i32 bcHeight;
     u16 bcPlanes;
     u16 bcBitCount;
     u32 biCompression;

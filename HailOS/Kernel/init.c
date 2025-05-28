@@ -1,5 +1,5 @@
 #include "init.h"
-#include "util.h" // For Panic, if needed, though GDT/IDT init should be robust
+#include "util.h"
 
 gdt_entry_t gGDT[GDT_ENTRIES];
 gdtr_t gGDTR;
@@ -108,6 +108,7 @@ void InitIDT() {
     SetIDTEntry(8,  IsrDoubleFault,   IDT_TYPE_INTERRUPT_GATE); // #DF (must be interrupt gate, error code pushed)
     SetIDTEntry(13, IsrGPF,           IDT_TYPE_INTERRUPT_GATE); // #GP (error code pushed)
     SetIDTEntry(14, IsrPageFault,     IDT_TYPE_INTERRUPT_GATE); // #PF (error code pushed)
+    SetIDTEntry(IRQ_IDT(IRQ_KEYBOARD), IsrKeyboard, IDT_TYPE_INTERRUPT_GATE);
     // Add more as needed, e.g., breakpoint (int3), NMI, etc.
 
     gIDTR.Limit = sizeof(gIDT) - 1;

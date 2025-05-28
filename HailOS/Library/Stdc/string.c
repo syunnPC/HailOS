@@ -28,11 +28,6 @@ void* memcpy(void* Dest, const void* Src, size_t Size)
         return NULL;
     }
 
-    if((size_t)Src + Size >= (size_t)Dest)
-    {
-        return NULL;
-    }
-
     for(size_t i=0; i<Size; i++)
     {
         ((u8*)Dest)[i] = ((u8*)Src)[i];
@@ -41,7 +36,7 @@ void* memcpy(void* Dest, const void* Src, size_t Size)
     return Dest;
 }
 
-boolean memcmp(const void* Buf1, const void* Buf2, size_t BufSize)
+boolean memeq(const void* Buf1, const void* Buf2, size_t BufSize)
 {
     if(BufSize == 0)
     {
@@ -80,7 +75,7 @@ boolean strcmp(const char* Str1, const char* Str2)
         return false;
     }
 
-    return memcmp(Str1, Str2, lenStr1);
+    return memeq(Str1, Str2, lenStr1);
 }
 
 void* memset(void* Dest, char Ch, size_t Count)
@@ -114,7 +109,7 @@ boolean strncmp(const char* Str1, const char* Str2, size_t Count)
         Count = (lenStr1 < lenStr2 ? lenStr1 : lenStr2);
     }
 
-    return memcmp(Str1, Str2, Count);
+    return memeq(Str1, Str2, Count);
 }
 
 char* strstr(char* Str1, const char* Str2)

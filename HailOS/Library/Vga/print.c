@@ -251,6 +251,31 @@ void PutString(const char* Str, rgbcolor_t Color)
     CurrentPosition.Y = y;
 }
 
+void DeletePreviousCharacter(void)
+{
+    for(u32 x=CurrentPosition.X - FONT_WIDTH; x<CurrentPosition.X; x++)
+    {
+        for(u32 y=CurrentPosition.Y + FONT_HEIGHT; y>= CurrentPosition.Y ; y--)
+        {
+            addr_t Offset = (y * gGraphicInfo->PixelsPerScanLine + x) * PIXEL_SIZE;
+            framebuffer_color_t* PixelAddress = (framebuffer_color_t*)(gBufferInfo.FrameBufferBase + Offset);
+            *PixelAddress = ConvertColor(gBackgroundColor);
+        }
+    }
+
+    FillScreenWithBackgroundColor();
+    DrawBufferContextToFrameBuffer();
+
+    if(CurrentPosition.X - FONT_WIDTH < 0)
+    {
+        CurrentPosition.X = 0;
+    }
+    else
+    {
+        CurrentPosition.X -= FONT_WIDTH;
+    }
+}
+
 void Scroll(size_t ScrollCharactorCount)
 {
     FillScreenWithBackgroundColor();
@@ -262,4 +287,9 @@ void Scroll(size_t ScrollCharactorCount)
 void SetCursorPos(coordinate2D_t Location)
 {
     CurrentPosition = Location;
+}
+
+coordinate2D_t GetCurrentCursorPos(void)
+{
+    return CurrentPosition;
 }

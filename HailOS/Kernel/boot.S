@@ -1,6 +1,3 @@
-/*
- * Kernel/boot.S - Kernel Entry Point for HailOS
- */
 .section .boot
 .global _start
 

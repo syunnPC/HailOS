@@ -10,6 +10,11 @@
 #include "stdcolor.h"
 #include "timeinfo.h"
 #include "string.h"
+#include "stdio.h"
+#include "fileio.h"
+#include "bitmap.h"
+#include "pic.h"
+#include "ps2kbd.h"
 
 void main(bootinfo_t* BootInfo)
 {
@@ -20,42 +25,54 @@ void main(bootinfo_t* BootInfo)
     InitMemoryManager(BootInfo->MemoryInfo);
     InitGraphics(BootInfo->GraphicInfo, COLOR_AQUA);
 
-    PUTS("HailOS version 0.0.2 Alpha\n\rSee https://github.com/syunnPC/HailOS\r\n");
+    RemapPic(PIC_MASTER_ISR_OFFSET, 0x28);
+    PicUnmaskIrq(IRQ_KEYBOARD);
+
+    asm volatile("sti");
+
+    puts("HailOS version 0.0.2 Alpha\n\rSee https://github.com/syunnPC/HailOS");
     Wait(4);
 
     PUTS(utos(GetTotalFreeMemory()/SI_MI));
-    PUTS(" MiB memory available.\r\n");
+    PUTS(" MiB memory available. Total memory regions: ");
+    puts(utos(gMemoryInfo->FreeRegionCount));
     Wait(4);
 
     InitVbr();
-    PUTS("VBR Initialization finished.\r\n");
+    puts("VBR Initialization finished.");
     Wait(4);
 
+    file_object_t picture1;
     HOSstatus Status;
-    size_t FileSizeMax = 1*SI_MI;
-    size_t FileSizeActual = 0;
-    u8* buffer = KernelAlloc(FileSizeMax);
-    if(buffer == NULL)
-    {
-        Panic(STATUS_MEMORY_ALLOCATION_FAILED, 2, __LINE__);
-    }
 
     PUTS("Reading \"picture1.bmp\" from disk... ");
-    Status = ReadFile("picture1.bmp", buffer, FileSizeMax, &FileSizeActual);
+    Status = OpenFile("picture1.bmp", &picture1);
     if(HOS_ERROR(Status))
     {
         Panic(Status, 3, __LINE__);
     }
     PUTS("done! File Loaded at address ");
-    PUTS(utos((addr_t)buffer));
+    PUTS(utos((addr_t)picture1.Buffer));
     PUTS(", filesize [KiB] = ");
-    PUTS(utos(FileSizeActual/SI_KI));
+    puts(utos(picture1.FileSize/SI_KI));
+    Status = CloseFile(&picture1);
+    Wait(3);
 
-    Scroll(1);
+    FillScreenWithBackgroundColor();
+    SetCursorPos(COORD(0, 0));
+    CleanBuffer();
 
-    PUTS("Scroll is not implemented!");
+    PUTS("File name >");
+    char* buffer = ReadKeysWithEcho(FILENAME_MAX, COLOR_WHITE);
+    DrawBitmap(buffer, GetCurrentCursorPos());
 
-    ChangeBackgroundColor(COLOR_NAVY);
-
+    while(true)
+    {
+        ShiftBufferContext(1, VERTICAL_UP);
+        FillScreenWithBackgroundColor();
+        DrawBufferContextToFrameBuffer();
+        Sleep(20);
+    }
+    
     HaltProcessor();
 }
