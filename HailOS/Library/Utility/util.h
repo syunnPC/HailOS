@@ -1,13 +1,24 @@
+/*
+    OS ユーティリティ機能
+    作成日 2025-05-29
+*/
+
 #pragma once
 
-#include "commonlib.h"
-#include "typelib.h"
+#include "basetype.h"
+#include "common.h"
 
+/// @brief パニックを発生させ、システムを停止
+/// @param  Status ステータスコード
+/// @param  Param 問題の特定に役立つパラメータ
+/// @param  Line 問題が発生したソースファイルの行数
+NORETURN void Panic(HOSstatus, u64, u32);
+
+/// @brief 強制再起動を実施（トリプルフォールトを発生させる）
+NORETURN void ForceReboot(void);
+
+/// @brief プロセッサを停止
 NORETURN void HaltProcessor(void);
-NORETURN void Panic(u32, u32, u32);
-NORETURN void Reboot(void);
 
-void Wait(u64);
-void Sleep(u64);
-
-extern HOSstatus gLastStatus;
+//Panic()をコールするマクロ
+#define PANIC(Status, Param) Panic(Status, Param, __LINE__)

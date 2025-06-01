@@ -1,78 +1,111 @@
 #include "memmgr.h"
-#include "typelib.h"
+#include "memutil.h"
+#include "common.h"
+#include "basetype.h"
 #include "status.h"
 #include "util.h"
 
-meminfo_t* gMemoryInfo;
+static meminfo_t* sMemoryInfo;
 
-void* KernelAlloc(size_t Size)
+#define KERNEL_ALLOC_ALIGN 8
+
+void InitMemoryManager(meminfo_t* MemoryInfo)
+{
+    if(MemoryInfo == NULL)
+    {
+        ForceReboot();
+    }
+
+    sMemoryInfo = MemoryInfo;
+}
+
+void* Alloc(size_t Size)
 {
     if(Size == 0)
     {
         return NULL;
     }
 
-    if(gMemoryInfo == NULL)
+    if(sMemoryInfo == NULL)
     {
-        PANIC(STATUS_NOT_INITIALIZED, 0);
+        PANIC(STATUS_NOT_INITIALIZED, 1);
     }
 
-    Size = (Size + KERNEL_ALLOC_ALIGN - 1) & ~(KERNEL_ALLOC_ALIGN - 1);
+#ifndef KERNEL_ALLOC_NO_ALIGN //アライメントを実施しないメモリアロケーションを実施するなら定義
+    Size = (Size + KERNEL_ALLOC_ALIGN - 1) & ~(KERNEL_ALLOC_ALIGN - 1); 
 
-    for(size_t i=0; i<gMemoryInfo->FreeRegionCount; i++)
-    {   
-        addr_t Base = gMemoryInfo->FreeMemory[i].Base;
-        u64 Length = gMemoryInfo->FreeMemory[i].Length;
+    for(size_t i=0; i<sMemoryInfo->FreeRegionCount; i++)
+    {
+        addr_t base_addr = sMemoryInfo->FreeMemory[i].Base;
+        u64 length = sMemoryInfo->FreeMemory[i].Length;
 
-        addr_t AlignedBase = (Base + KERNEL_ALLOC_ALIGN - 1) &~(KERNEL_ALLOC_ALIGN - 1);
-        u64 Padding = AlignedBase - Base;
+        addr_t aligned_base = (base_addr + KERNEL_ALLOC_ALIGN - 1) &~(KERNEL_ALLOC_ALIGN - 1);
+        u64 padding = aligned_base - base_addr;
 
-        if(Length < Size + Padding)
+        if(length < Size + padding)
         {
             continue;
         }
 
-        void* Allocated = (void*)(u64)AlignedBase;
+        void* allocated = (void*)aligned_base;
 
-        gMemoryInfo->FreeMemory[i].Base = AlignedBase + Size;
-        gMemoryInfo->FreeMemory[i].Length = Length - (Size + Padding);
-
-        return Allocated;
+        sMemoryInfo->FreeMemory[i].Base = aligned_base+Size;
+        sMemoryInfo->FreeMemory[i].Length = length - (Size+padding);
+        return allocated;
     }
+#else
+    for(size_t i=0; i<sMemoryInfo->FreeRegionCount; i++)
+    {
+        size_t base_addr = sMemoryInfo->FreeMemory[i].Base;
+        u64 length = sMemoryInfo->FreeMemory[i].Length;
 
-    PANIC(STATUS_NO_MEMORY_AVAILABLE, gMemoryInfo->FreeRegionCount);
+        if(length < Size)
+        {
+            continue;
+        }
+
+        void* allocated = (void*)base_addr;
+        sMemoryInfo->FreeMemory[i].Base += Size;
+        sMemoryInfo->FreeMemory[i].Length -= Size;
+        return allocated;
+    }
+#endif //KERNEL_ALLOC_NO_ALIGN
+
+    PANIC(STATUS_NO_MEMORY_AVAILABLE, GetLargestMemoryRegion());
 }
 
-void KernelFree(void* Addr, size_t Size)
+void FreeMemory(void* Ptr, size_t Size)
 {
-    if(Addr == NULL || Size == 0)
+    if(Ptr == NULL || Size == 0)
     {
         return;
     }
 
-    if(gMemoryInfo->FreeRegionCount < MAX_FREE_REGIONS)
+    if(sMemoryInfo->FreeRegionCount < MAX_FREE_REGIONS)
     {
-        gMemoryInfo->FreeMemory[gMemoryInfo->FreeRegionCount++] = (freeregion_t){.Base = (u64)Addr, .Length = Size};
+        sMemoryInfo->FreeMemory[sMemoryInfo->FreeRegionCount++] = (freeregion_t){(addr_t)Ptr, Size};
     }
 }
 
-void InitMemoryManager(meminfo_t* MemInfo)
-{
-    if(MemInfo == NULL)
-    {
-        Reboot();
-    }
-
-    gMemoryInfo = MemInfo;
-}
-
-size_t GetTotalFreeMemory(void)
+size_t GetAvailableMemorySize(void)
 {
     size_t result = 0;
-    for(size_t i=0; i<gMemoryInfo->FreeRegionCount; i++)
+    for(size_t i=0; i<sMemoryInfo->FreeRegionCount; i++)
     {
-        result += gMemoryInfo->FreeMemory[i].Length;
+        result += sMemoryInfo->FreeMemory[i].Length;
     }
+    return result;
+}
 
+size_t GetLargestMemoryRegion(void)
+{
+    size_t result = 0;
+    for(size_t i=0; i<sMemoryInfo->FreeRegionCount; i++)
+    {
+        if(sMemoryInfo->FreeMemory[i].Length > result)
+        {
+            result = sMemoryInfo->FreeMemory[i].Length;
+        }
+    }
     return result;
 }

@@ -1,49 +1,48 @@
 #include "util.h"
-#include "commonlib.h"
-#include "typelib.h"
-#include "kerneltype.h"
-#include "print.h"
-#include "stdcolor.h"
-#include "timeinfo.h"
-#include "string.h"
+#include "basetype.h"
 #include "vga.h"
+#include "kernel_type.h"
+#include "color.h"
+#include "system_console.h"
+#include "common.h"
+#include "string.h"
 
-HOSstatus gLastStatus;
+NORETURN void Panic(HOSstatus Status, u64 Param, u32 Line)
+{
+    if(!IsGraphicAvailable())
+    {
+        ForceReboot();
+    }
+    SetBackgroundColor(COLOR_BLUE);
+    FillScreenWithBackgroundColor();
+    SetCursorPos(COORD(0,0));
+    ClearBuffer();
+    puts("System Error! System halted.\r\nStatus: ");
+    puts(utos(Status));
+    puts(", Parameter ");
+    puts(utos(Param));
+    puts(", at line ");
+    puts(utos(Line));
+    HaltProcessor();
+}
 
 NORETURN void HaltProcessor(void)
 {
     while(true)
     {
-        asm volatile("hlt");
+        asm volatile
+        (
+            "cli\n"
+            "hlt\n"
+        );
     }
 }
 
-NORETURN void Panic(u32 Code, u32 Param1, u32 Param2)
+NORETURN void ForceReboot(void)
 {
-    if(!gGraphicAvailable)
-    {
-        HaltProcessor();
-    }
-    
-    CleanBuffer();
-    SetBackgroundColor(COLOR_BLUE);
-    FillScreenWithBackgroundColor();
-    SetCursorPos(COORD(0, 0));
-    PUTS("System Error\r\nStatus: ");
-    PUTS(utos(Code));
-    PUTS(" Param1: ");
-    PUTS(utos(Param1));
-    PUTS(" Param2: ");
-    PUTS(utos(Param2));
-    PUTS("\r\nSystem halted.");
-    HaltProcessor();
-}
-
-NORETURN void Reboot(void)
-{
-    idtr_t idtr = {0, 0};
-
-    asm volatile (
+    struct {u16 Limit; u64 Base;} PACKED idtr = {0, 0};
+    asm volatile
+    (
         "lidt %[idtr]\n\t"
         "int3\n\t"
         "hlt\n\t"
@@ -52,18 +51,5 @@ NORETURN void Reboot(void)
         : [idtr] "m" (idtr)
         : "memory"
     );
-}
-
-void Wait(u64 Seconds)
-{
-    u64 Start = ReadTsc();
-    u64 EndTsc = Start + (Seconds * gHwClockInfo->TscFreq);
-    while(ReadTsc() < EndTsc);
-}
-
-void Sleep(u64 Miliseconds)
-{
-    u64 Start = ReadTsc();
-    u64 EndTsc = Start + (gHwClockInfo->TscFreq * (Miliseconds / 1000));
-    while(ReadTsc() < EndTsc);
+    HaltProcessor();
 }

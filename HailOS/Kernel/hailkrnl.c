@@ -1,78 +1,46 @@
-#include "util.h"
+#include "krnl_init.h"
 #include "boot.h"
-#include "init.h"
-#include "commonlib.h"
-#include "typelib.h"
-#include "status.h"
+#include "color.h"
+#include "util.h"
 #include "vga.h"
-#include "print.h"
-#include "fat32.h"
-#include "stdcolor.h"
-#include "timeinfo.h"
-#include "string.h"
-#include "stdio.h"
-#include "fileio.h"
+#include "system_console.h"
+#include "memutil.h"
+#include "timer.h"
 #include "bitmap.h"
-#include "pic.h"
-#include "ps2kbd.h"
+#include "status.h"
+#include "string.h"
+#include "file.h"
 
-void main(bootinfo_t* BootInfo)
+#if !defined __GNUC__
+#error Use x86_64-elf-gcc to compile this program.
+#endif
+
+void main(bootinfo_t* Info)
 {
-    InitGDT();
-    InitIDT();
+    InitSystem(Info);
 
-    gHwClockInfo = BootInfo->ClockInfo;
-    InitMemoryManager(BootInfo->MemoryInfo);
-    InitGraphics(BootInfo->GraphicInfo, COLOR_AQUA);
-
-    RemapPic(PIC_MASTER_ISR_OFFSET, 0x28);
-    PicUnmaskIrq(IRQ_KEYBOARD);
-
-    asm volatile("sti");
-
-    puts("HailOS version 0.0.2 Alpha\n\rSee https://github.com/syunnPC/HailOS");
-    Wait(4);
-
-    PUTS(utos(GetTotalFreeMemory()/SI_MI));
-    PUTS(" MiB memory available. Total memory regions: ");
-    puts(utos(gMemoryInfo->FreeRegionCount));
-    Wait(4);
-
-    InitVbr();
-    puts("VBR Initialization finished.");
-    Wait(4);
-
-    file_object_t picture1;
-    HOSstatus Status;
-
-    PUTS("Reading \"picture1.bmp\" from disk... ");
-    Status = OpenFile("picture1.bmp", &picture1);
-    if(HOS_ERROR(Status))
-    {
-        Panic(Status, 3, __LINE__);
-    }
-    PUTS("done! File Loaded at address ");
-    PUTS(utos((addr_t)picture1.Buffer));
-    PUTS(", filesize [KiB] = ");
-    puts(utos(picture1.FileSize/SI_KI));
-    Status = CloseFile(&picture1);
-    Wait(3);
-
-    FillScreenWithBackgroundColor();
-    SetCursorPos(COORD(0, 0));
-    CleanBuffer();
-
-    PUTS("File name >");
-    char* buffer = ReadKeysWithEcho(FILENAME_MAX, COLOR_WHITE);
-    DrawBitmap(buffer, GetCurrentCursorPos());
+    puts("HailOS Version 0.0.2r\r\n");
+    puts(utos(GetAvailableMemorySize() / SI_MEGA));
+    puts("MB Memory available. Largest block size = ");
+    puts(utos(GetLargestMemoryRegion() / SI_MEGA));
+    puts("\r\n"); 
+    puts("Screen resolution : ");
+    puts(utos(GetScreenResolution().Width));
+    puts(" x ");
+    puts(utos(GetScreenResolution().Height));
+    puts("\r\n");
 
     while(true)
     {
-        ShiftBufferContext(1, VERTICAL_UP);
-        FillScreenWithBackgroundColor();
-        DrawBufferContextToFrameBuffer();
-        Sleep(20);
+        //puts()のところが2回表示されたり不正な分岐で実行される
+        char filename[13];
+        puts(">");
+        ReadInputWithEcho(filename, 13, COLOR_WHITE, true);
+        if(!IsExistingFile(filename))
+        {
+            puts("The file does not exist.\r\n");
+            continue;
+        }
+        DrawBitmapInline(filename);
     }
-    
-    HaltProcessor();
 }
