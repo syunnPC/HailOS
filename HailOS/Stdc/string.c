@@ -200,3 +200,21 @@ char* ByteToHexString(u8 Value)
     buffer[2] = '\0';
     return buffer;
 }
+
+int strcmp(const char* Str1, const char* Str2)
+{
+    if(strlen(Str1) != strlen(Str2))
+    {
+        return -1;
+    }
+
+    for(size_t i=0; i<strlen(Str1); i++)
+    {
+        if(Str1[i] != Str2[i])
+        {
+            return i;
+        }
+    }
+
+    return 0;
+}

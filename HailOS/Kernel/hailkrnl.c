@@ -15,6 +15,13 @@
 #error Use x86_64-elf-gcc to compile this program.
 #endif
 
+#define COMMAND_LEN_MAX 256
+
+#define COMMAND_NAME_CLEAR "clear"
+#define COMMAND_NAME_PIC "pic"
+#define COMMAND_NAME_EXIT "exit"
+#define COMMAND_NAME_VER "ver"
+
 void main(bootinfo_t* Info)
 {
     InitSystem(Info);
@@ -30,17 +37,46 @@ void main(bootinfo_t* Info)
     puts(utos(GetScreenResolution().Height));
     puts("\r\n");
 
+    char cmd[COMMAND_LEN_MAX];
     while(true)
     {
         //puts()のところが2回表示されたり不正な分岐で実行される
-        char filename[13];
+        FillMemory(cmd, COMMAND_LEN_MAX, 0);
         puts(">");
-        ReadInputWithEcho(filename, 13, COLOR_WHITE, true);
-        if(!IsExistingFile(filename))
+        ReadInputWithEcho(cmd, COMMAND_LEN_MAX, COLOR_WHITE, true);
+        if(strcmp(COMMAND_NAME_CLEAR, cmd) == 0)
         {
-            puts("The file does not exist.\r\n");
+            ClearBuffer();
+            FillScreenWithBackgroundColor();
+            SetCursorPos(COORD(0, 0));
             continue;
         }
-        DrawBitmapInline(filename);
+        else if(strcmp(COMMAND_NAME_VER, cmd) == 0)
+        {
+            puts("HailOS Version 0.0.2\r\nSee https://github.com/syunnPC/HailOS\r\n");
+            continue;
+        }
+        else if(strncmp(COMMAND_NAME_PIC, cmd, strlen(COMMAND_NAME_PIC)) == 0)
+        {
+            if(cmd[3] == ' ')
+            {
+                char filename[13];
+                filename[12] = '\0';
+                MemCopy(filename, (u8*)cmd + 4, FILENAME_MAX);
+                if(!IsExistingFile(filename))
+                {
+                    puts("file not found.\r\n");
+                    continue;
+                }
+                DrawBitmapInline(filename);
+                continue;
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        puts("Command not found.\r\n");
     }
 }

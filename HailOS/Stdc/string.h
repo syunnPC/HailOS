@@ -39,3 +39,9 @@ char* utos(u64);
 /// @param Value 値
 /// @return 変換された文字列
 char* ByteToHexString(u8 Value);
+
+/// @brief 文字列比較
+/// @param  Str1 文字列1
+/// @param  Str2 文字列2
+/// @return 等しければ0
+int strcmp(const char*, const char*);
