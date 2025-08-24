@@ -8,7 +8,7 @@
 #include "pic.h"
 #include "color.h"
 
-#define SYSTEM_DEFAULT_COLOR COLOR_AQUA
+#define SYSTEM_DEFAULT_COLOR RGB(80, 80, 80)
 
 void InitSystem(bootinfo_t* Info)
 {
