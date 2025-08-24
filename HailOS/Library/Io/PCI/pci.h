@@ -1,0 +1,30 @@
+/*
+    PCIライブラリ
+    作成日 2025-08-24
+*/
+
+#include "basetype.h"
+#include "common.h"
+#include "io.h"
+
+#define CONFIG_ADDRESS 0xCF8
+#define CONFIG_DATA 0xCFC
+
+/*
+    Config Spaceデータ
+    Bus : 0~255
+    Device : 0~31
+    Function : 0~7
+    Reg : 0~63 { 256byteを32bitずつ取得 }
+*/
+
+/// @brief PCI Config Spaceを読む
+/// @param Bus Bus番号
+/// @param Device Device番号
+/// @param Function Function番号
+/// @param Offset 
+/// @return PCI Config Space(32ビットずつ)
+u32 PCIConfigRead32(u8, u8, u8, u8);
+
+/// @brief PCIデバイスをスキャン、列挙して情報を出力
+void EnumeratePCIDevicesAndPrint(void);

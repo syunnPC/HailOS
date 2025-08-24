@@ -11,6 +11,16 @@ void outb(u16 Port, u8 Value)
     );
 }
 
+void outl(u16 Port, u32 Value)
+{
+    asm volatile
+    (
+        "outl %0, %1"
+        :
+        : "a"(Value), "Nd"(Port)
+    );
+}
+
 u8 inb(u16 Port)
 {
     u8 result;
@@ -33,4 +43,15 @@ u16 inw(u16 Port)
         : "Nd"(Port)
     );
     return result;
+}
+
+u32 inl(u16 Port)
+{
+    u32 result;
+    asm volatile
+    (
+        "inl %1, %0"
+        : "=a"(result)
+        : "Nd"(Port)
+    );
 }

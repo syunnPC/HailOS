@@ -210,19 +210,21 @@ bool FindFat32Partition(u64* OutLba)
             bool guid_match = false;
             if(MemEq(entry.PartitionTypeGuid, ESP_GUID, 16))
             {
-                //puts("Found EFI System Partition.\r\n");
+                puts("Found EFI System Partition.\r\n");
+                Sleep(5000);
                 guid_match = true;
             }
             else if(MemEq(entry.PartitionTypeGuid, MS_BASIC_DATA_GUID, 16))
             {
-                //puts("Found Microsoft Basic DATA Partition.\r\n");
+                puts("Found Microsoft Basic DATA Partition.\r\n");
+                Sleep(5000);
                 guid_match = true;
             }
 
             if(guid_match)
             {
                 AtaReadSectorLba28(entry.FirstLba, (u8*)&vbr_temp);
-                if(strncmp(vbr_temp.FsType, "FAT32   ", 5) == 0)
+                if(MemEq(vbr_temp.FsType, "FAT32   ", 8))
                 {
                     *OutLba = entry.FirstLba;
                     return true;

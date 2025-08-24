@@ -33,6 +33,7 @@ LIB_IO_DISK_ATA_SRC_DIR = $(LIB_IO_DISK_DIR)/Ata
 LIB_IO_PIC_SRC_DIR = $(LIB_IO_DIR)/Pic
 LIB_IO_PS2_SRC_DIR = $(LIB_IO_DIR)/Ps2
 LIB_IO_TSC_SRC_DIR = $(LIB_IO_DIR)/Tsc
+LIB_IO_PCI_SRC_DIR = $(LIB_IO_DIR)/PCI
 
 LIB_MEMMGR_SRC_DIR = $(LIBRARY_DIR)/MemoryManager
 LIB_TIMER_SRC_DIR = $(LIBRARY_DIR)/Timer
@@ -76,7 +77,8 @@ INCLUDES = \
     -I$(LIB_VGA_SRC_DIR) \
     -I$(STDC_SRC_DIR) \
     -I$(LIB_UTIL_FILE_SRC_DIR) \
-    -I$(LIB_UTIL_BMP_SRC_DIR)
+    -I$(LIB_UTIL_BMP_SRC_DIR) \
+    -I$(LIB_IO_PCI_SRC_DIR)
 
 # Linker script
 LDSCRIPT = linker.ld
@@ -114,7 +116,8 @@ C_SOURCES_LIBRARY = \
     $(LIB_IO_PS2_SRC_DIR)/ps2kbdapi.c \
     $(LIB_IO_PS2_SRC_DIR)/keycode.c \
     $(LIB_UTIL_FILE_SRC_DIR)/file.c \
-    $(LIB_UTIL_BMP_SRC_DIR)/bitmap.c
+    $(LIB_UTIL_BMP_SRC_DIR)/bitmap.c \
+    $(LIB_IO_PCI_SRC_DIR)/pci.c
 
 C_SOURCES_STDC = \
     $(STDC_SRC_DIR)/string.c
