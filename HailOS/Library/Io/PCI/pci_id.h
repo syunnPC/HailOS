@@ -3,6 +3,8 @@
     作成日 2025-08-24
 */
 
+#pragma once
+
 #define PCI_VENDOR_ID_INVALID 0xFFFF
 #define PCI_VENDOR_ID_INTEL 0x8086
 #define PCI_VENDOR_ID_AMD 0x1022

@@ -12,6 +12,7 @@
 #define NORETURN __attribute__((noreturn))
 #define PACKED __attribute__((packed))
 #define UNUSED __attribute__((unused))
+#define ALIGN(size) __attribute__((aligned(size)))
 
 #define SI_KILO 1000ULL
 #define SI_MEGA 1000000ULL

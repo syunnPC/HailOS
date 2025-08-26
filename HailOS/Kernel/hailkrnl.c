@@ -11,6 +11,7 @@
 #include "string.h"
 #include "file.h"
 #include "pci.h"
+#include "ahci.h"
 
 #define COMMAND_LEN_MAX 256
 
@@ -19,6 +20,8 @@ void main(bootinfo_t* Info)
     InitSystem(Info);
 
     EnumeratePCIDevicesAndPrint();
+
+    AHCIProbeAndListPorts();
 
     while(true){}
 }

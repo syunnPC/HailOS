@@ -3,12 +3,18 @@
     作成日 2025-08-24
 */
 
+#pragma once
+
 #include "basetype.h"
 #include "common.h"
 #include "io.h"
 
 #define CONFIG_ADDRESS 0xCF8
 #define CONFIG_DATA 0xCFC
+
+#define PCI_CLASS_MASS_STORAGE 0x01
+#define PCI_SUBCLASS_SATA 0x06
+#define PCI_PROGIF_AHCI 0x01
 
 /*
     Config Spaceデータ
