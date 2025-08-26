@@ -71,7 +71,87 @@ typedef volatile struct
 #define HBA_PxCMD_FR (1 << 14)
 #define HBA_PxCMD_CR (1 << 15)
 
+#define FIS_TYPE_REG_H2D 0x27
+#define FIS_TYPE_REG_D2H 0x34
+
+#define ATA_TFD_BSY (1<<7)
+#define ATA_TFD_DRQ (1<<3)
+
+#define TFES_BIT (1u<<30)
+
+#define ATA_CMD_IDENTIFY_DEVICE 0xEC
+
 #define HBA_PORT(base, i) ((hba_port_t*)((u8*)(base) + 0x100 + (i)*0x80))
+
+typedef struct
+{
+    u32 Dba;
+    u32 Dbau;
+    u32 Rsv0;
+    u32 DbcI;
+} PACKED hba_prdt_entry_t;
+
+typedef struct
+{
+    u8 Cfis[64];
+    u8 Acmd[16];
+    u8 Rsv[48];
+    hba_prdt_entry_t Prdt[1];
+} PACKED ALIGN(128) hba_cmd_table_t;
+
+typedef struct 
+{
+    u8 Cfl:5;
+    u8 A:1;
+    u8 W:1;
+    u8 P:1;
+    u8 R:1;
+    u8 B:1;
+    u8 C:1;
+    u8 Rsv0:1;
+    u8 Pmp:4;
+    u16 Prdtl;
+    volatile u32 Prdbc;
+    u32 Ctba;
+    u32 Ctbau;
+    u32 Rsv1[4];
+} PACKED hba_cmd_header_t;
+
+typedef struct
+{
+    u8 Dsfis[0x1C];
+    u8 Rsv0[0x04];
+    u8 Psfis[0x14];
+    u8 Rsv1[0x0C];
+    u8 Rfis[0x14];
+    u8 Rsv2[0x04];
+    u8 Sdbfis[0x08];
+    u8 Ufis[0x40];
+    u8 Rsv3[0x60];
+} PACKED ALIGN(256) fis_recv_t;
+
+typedef struct
+{
+    u8 FisType;
+    u8 Pmport:4;
+    u8 Rsv0:3;
+    u8 C:1;
+    u8 Command;
+    u8 Featurel;
+    u8 Lba0;
+    u8 Lba1;
+    u8 Lba2;
+    u8 Device;
+    u8 Lba3;
+    u8 Lba4;
+    u8 Lba5;
+    u8 Featureh;
+    u8 Countl;
+    u8 Counth;
+    u8 Icc;
+    u8 Control;
+    u8 Rsv1[4];
+} PACKED fis_reg_h2d_t;
 
 typedef struct
 {
@@ -102,3 +182,6 @@ bool FindAHCIController(ahci_pci_info_t*);
 
 /// @brief AHCIのデバイスを判別し表示
 void AHCIProbeAndListPorts(void);
+
+/// @brief SATAディスクを初期化 
+void InitSATA(void);

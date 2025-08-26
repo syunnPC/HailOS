@@ -7,6 +7,12 @@
 #include "system_console.h"
 #include "string.h"
 #include "timer.h"
+#include "memutil.h"
+
+ALIGN(1024) static u8 gCmdListMemory[1024];
+ALIGN(256) static fis_recv_t gFisRecv;
+ALIGN(128) static hba_cmd_table_t gCmdTable;
+static u8 gIdentifyBuf[512];
 
 /// @brief AHCIデバイスの種類を判別
 /// @param Port ポート
@@ -217,4 +223,170 @@ void AHCIProbeAndListPorts(void)
         puts("\r\n");
         StopPort(p);
     }
+}
+
+static int FindFreeSlot(hba_port_t* Port)
+{
+    u32 slots = Port->Sact | Port->Ci;
+    for(int i=0; i<32; i++)
+    {
+        if((slots & (1u << i)) == 0)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+u32 AHCIInitPort(hba_mem_t* Abar)
+{
+    u32 pi = Abar->Pi;
+    for(int i=0; i<32; i++)
+    {
+        if(!(pi & (1 << i)))
+        {
+            continue;
+        }
+
+        hba_port_t* port = HBA_PORT(Abar, i);
+        ahci_device_type_t type = CheckType(port);
+        if(type == AHCI_DEV_SATA)
+        {
+            StopPort(port);
+
+            port->Clb = 0;
+            port->Clbu = 0;
+            port->Fb = 0;
+            port->Fbu = 0;
+
+            StartPort(port);
+
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+static void AHCIRebasePort(hba_mem_t* Abar, int PortIndex)
+{
+    hba_port_t* port = HBA_PORT(Abar, PortIndex);
+
+    FillMemory(gCmdListMemory, sizeof(gCmdListMemory), 0);
+    FillMemory(&gFisRecv, sizeof(gFisRecv), 0);
+    FillMemory(&gCmdTable, sizeof(gCmdTable), 0);
+
+    port->Clb = (u32)(addr_t)gCmdListMemory;
+    port->Clbu = 0;
+    port->Fb = (u32)(addr_t)&gFisRecv;
+    port->Fbu = 0;
+
+    hba_cmd_header_t* hdr = (hba_cmd_header_t*)(addr_t)gCmdListMemory;
+    hdr->Cfl = sizeof(fis_reg_h2d_t) / 4;
+    hdr->W = 0;
+    hdr->Prdtl = 1;
+    hdr->Ctba = (u32)(addr_t)&gCmdTable;
+    hdr->Ctbau = 0;
+    hdr->Prdbc = 0;
+    hdr->Pmp = 0;
+    hdr->Rsv0 = 0;
+    FillMemory(&hdr->Rsv1, sizeof(u32)*4, 0);
+    
+    hba_cmd_table_t* cmdtbl = &gCmdTable;
+    FillMemory(cmdtbl->Cfis, sizeof(cmdtbl->Cfis), 0);
+    FillMemory(cmdtbl->Acmd, sizeof(cmdtbl->Acmd), 0);
+    FillMemory(cmdtbl->Prdt, sizeof(cmdtbl->Prdt), 0);
+}
+
+bool AHCIIdentifyDevice(hba_mem_t* Abar, int PortIndex)
+{
+    hba_port_t* port = HBA_PORT(Abar, PortIndex);
+
+    u64 start = GetPerformanceCounter();
+    while(port->Tfd & (ATA_TFD_BSY | ATA_TFD_DRQ))
+    {
+        if(PerformanceCounterTickToMs(GetPerformanceCounter()-start) > 1000)
+        {
+            PANIC(STATUS_DISK_IO_ERROR, 2);
+        }
+    }
+
+    port->Clb = (u32)(addr_t)gCmdListMemory;
+    port->Clbu = 0;
+    port->Fb = (u32)(addr_t)&gFisRecv;
+    port->Fbu = 0;
+
+    hba_cmd_header_t* hdr = (hba_cmd_header_t*)(addr_t)gCmdListMemory;
+    hdr->Cfl = sizeof(fis_reg_h2d_t)/4;
+    hdr->W = 0;
+    hdr->Prdtl = 1;
+    hdr->Ctba = (u32)(addr_t)&gCmdTable;
+    hdr->Ctbau = 0;
+    hdr->Prdbc = 0;
+
+    hba_prdt_entry_t* prdt = &gCmdTable.Prdt[0];
+    prdt->Dba = (u32)(addr_t)gIdentifyBuf;
+    prdt->Dbau = 0;
+    prdt->DbcI = (512 - 1) | (1u << 31);
+
+    fis_reg_h2d_t* cfis = (fis_reg_h2d_t*)gCmdTable.Cfis;
+    for(int i=0; i<64; i++)
+    {
+        ((u8*)cfis)[i] = 0;
+    }
+
+    cfis->FisType = FIS_TYPE_REG_H2D;
+    cfis->C = 1;
+    cfis->Command = ATA_CMD_IDENTIFY_DEVICE;
+    cfis->Device = 1 << 6;
+
+    port->Is = 0xFFFFFFFF;
+
+    port->Ci = 1 << 0;
+
+    start = GetPerformanceCounter();
+    while(port->Ci & (1 << 0))
+    {
+        if(port->Is & TFES_BIT)
+        {
+            PANIC(STATUS_DISK_IO_ERROR, 3);
+        }
+
+        if(PerformanceCounterTickToMs(GetPerformanceCounter() - start) > 1000)
+        {
+            PANIC(STATUS_DISK_IO_ERROR, 4);
+        }
+    }
+
+    if(port->Is & TFES_BIT)
+    {
+        PANIC(STATUS_DISK_IO_ERROR, 5);
+    }
+
+    puts("IDENTIFY SUCCESS\r\n");
+    return true;
+}
+
+void InitSATA(void)
+{
+    ahci_pci_info_t info;
+    if(!FindAHCIController(&info))
+    {
+        puts("No AHCI Controller found.\r\n");
+        return;
+    }
+
+    puts("AHCI Device @PCI bus=");
+    puts(utos(info.Bus));
+    puts(" dev=");
+    puts(utos(info.Device));
+    puts(" func=");
+    puts(utos(info.Function));
+    puts("\r\n");
+
+    hba_mem_t* abar = (hba_mem_t*)info.Abar;
+    int port = AHCIInitPort(abar);
+    AHCIRebasePort(abar, port);
+    AHCIIdentifyDevice(abar, port);
 }

@@ -13,15 +13,13 @@
 #include "pci.h"
 #include "ahci.h"
 
-#define COMMAND_LEN_MAX 256
-
 void main(bootinfo_t* Info)
 {
     InitSystem(Info);
 
     EnumeratePCIDevicesAndPrint();
 
-    AHCIProbeAndListPorts();
+    InitSATA();
 
     while(true){}
 }
