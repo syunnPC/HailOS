@@ -4,8 +4,67 @@
 #include "common.h"
 #include "util.h"
 #include "status.h"
+#include "timer.h"
 
-void AtaReadSectorLba28(u32 Lba, u8* Buffer)
+#define SLEEP_LENGTH 500
+
+static inline void IoWait(void)
+{
+    u64 f = GetTscFreq();
+    double cpns = f / 1000000000;
+    u64 wclk = (u64)(cpns * SLEEP_LENGTH);
+    u64 start = GetPerformanceCounter();
+    while(!(GetPerformanceCounter() > start + wclk));
+}
+
+bool ATACheckDeviceMaster(void)
+{
+    outb(ATA_DATA_PORT + ATA_REG_DRIVE_HEAD, 0xA0);
+    IoWait();
+
+    outb(ATA_DATA_PORT + ATA_REG_STATUS, 0x00);
+    IoWait();
+
+    outb(ATA_DATA_PORT+ ATA_REG_STATUS, ATA_CMD_IDENTIFY);
+    IoWait();
+
+    u8 status = inb(ATA_DATA_PORT+ATA_REG_STATUS);
+    if(status == 0)
+    {
+        return false;
+    }
+
+    u64 f = GetTscFreq();
+    double cpns = f / 1000000000;
+    u64 wclk = (u64)(cpns * SLEEP_LENGTH);
+    u64 start = GetPerformanceCounter();
+    while(inb(ATA_DATA_PORT + ATA_REG_STATUS) & ATA_STATUS_BSY)
+    {
+        if(GetPerformanceCounter() - start > wclk)
+        {
+            return false;
+        }
+    }
+
+    if(PerformanceCounterTickToMs(GetPerformanceCounter()-start) >= 1000)
+    {
+        return false;
+    }
+
+    if(status & ATA_STATUS_ERR)
+    {
+        return false;
+    }
+
+    if(status & ATA_STATUS_DRQ)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+void ATAReadSectorLBA28(u32 Lba, u8* Buffer)
 {
     if(Buffer == NULL)
     {
@@ -40,3 +99,4 @@ void AtaReadSectorLba28(u32 Lba, u8* Buffer)
         Buffer[i*2 + 1] = (u8)((word >> 8) & 0xFF);
     }
 }
+

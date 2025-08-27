@@ -8,6 +8,7 @@
 #include "string.h"
 #include "system_console.h"
 #include "timer.h"
+#include "hal_disk.h"
 
 static fat32_vbr_t sVbr;
 static u64 sFat32BaseLba;
@@ -38,7 +39,10 @@ void ReadCluster(u32 ClusterNum, u8* Buffer)
     u32 first_lba = sClusterStartLba + (ClusterNum - 2) * sSectorsPerCluster;
     for(u32 i=0; i<sSectorsPerCluster; i++)
     {
-        AtaReadSectorLba28((u32)first_lba+i, Buffer + (i*SECTOR_SIZE));
+        if(!HALMainDiskReadSector((u32)first_lba+i, Buffer + (i*SECTOR_SIZE)))
+        {
+            PANIC(STATUS_HAL_ERROR, 0);
+        }
     }
 }
 
@@ -50,7 +54,10 @@ u32 GetNextCluster(u32 Cluster)
 
     u32 fat_read_lba = sFatStartLba + fat_sector_num;
 
-    AtaReadSectorLba28(fat_read_lba, sFatSector);
+    if(!HALMainDiskReadSector(fat_read_lba, sFatSector))
+    {
+        PANIC(STATUS_HAL_ERROR, 1);
+    }
 
     u32 raw_next_cluster_val;
     if (offset_in_sector <= SECTOR_SIZE - sizeof(u32))
@@ -60,7 +67,7 @@ u32 GetNextCluster(u32 Cluster)
     } 
     else 
     {
-        PANIC(STATUS_IO_ERROR, offset_in_sector);
+        PANIC(STATUS_FAT32_FILESYSTEM, offset_in_sector);
     }
 
     u32 final_next_cluster = raw_next_cluster_val & 0x0FFFFFFF;
@@ -181,7 +188,11 @@ HOSstatus ReadFile(const char* FileName, u8* OutBuffer, size_t MaxSize, size_t* 
 bool FindFat32Partition(u64* OutLba)
 {
     gpt_header_t header;
-    AtaReadSectorLba28(1, (u8*)&header);
+    if(!HALMainDiskReadSector(1, (u8*)&header))
+    {
+        return false;
+    }
+
     if(header.Signature != GPT_SIGNATURE)
     {
         return false;
@@ -202,7 +213,10 @@ bool FindFat32Partition(u64* OutLba)
         }
         u32 target_lba = entry_lba + (i * entry_size) / SECTOR_SIZE;
         u32 offset_in_sector = (i * entry_size) % SECTOR_SIZE;
-        AtaReadSectorLba28(target_lba, sector_buffer);
+        if(!HALMainDiskReadSector(target_lba, sector_buffer))
+        {
+            PANIC(STATUS_HAL_ERROR, 3);
+        }
         MemCopy(&entry, sector_buffer + offset_in_sector, entry_size);
 
         if(entry.FirstLba > 0)
@@ -223,7 +237,10 @@ bool FindFat32Partition(u64* OutLba)
 
             if(guid_match)
             {
-                AtaReadSectorLba28(entry.FirstLba, (u8*)&vbr_temp);
+                if(!HALMainDiskReadSector(entry.FirstLba, (u8*)&vbr_temp))
+                {
+                    PANIC(STATUS_HAL_ERROR, 4);
+                }
                 if(MemEq(vbr_temp.FsType, "FAT32   ", 8))
                 {
                     *OutLba = entry.FirstLba;
@@ -241,7 +258,10 @@ void InitVbr()
     {
         PANIC(STATUS_NOT_FOUND, 0);
     }
-    AtaReadSectorLba28(sFat32BaseLba, (u8*)&sVbr);
+    if(!HALMainDiskReadSector(sFat32BaseLba, (u8*)&sVbr))
+    {
+        PANIC(STATUS_HAL_ERROR, 5);
+    }
 
     if (sVbr.BytesPerSector != 512 || sVbr.SectorsPerCluster == 0 || (sVbr.SectorsPerCluster & (sVbr.SectorsPerCluster - 1)) != 0 || sVbr.NumFats == 0 || 
     sVbr.ReservedSectorCount == 0 ||  sVbr.FatSize32 == 0 || sVbr.RootClustor < 2 || sVbr.BootSectorSignature != 0xAA55 || strncmp(sVbr.FsType, "FAT32", 5) != 0)

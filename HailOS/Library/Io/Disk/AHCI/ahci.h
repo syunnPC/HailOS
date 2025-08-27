@@ -80,6 +80,13 @@ typedef volatile struct
 #define TFES_BIT (1u<<30)
 
 #define ATA_CMD_IDENTIFY_DEVICE 0xEC
+//_EXT : 48bit LBA, _EXTなし: 28bit LBA用
+#define ATA_CMD_READ_DMA_EXT 0x25
+#define ATA_CMD_WRITE_DMA_EXT 0x35
+#define ATA_CMD_READ_DMA 0xC8
+#define ATA_CMD_WRITE_DMA 0xCA
+
+#define HBA_PxIS_TFES 0x40000000
 
 #define HBA_PORT(base, i) ((hba_port_t*)((u8*)(base) + 0x100 + (i)*0x80))
 
@@ -185,3 +192,11 @@ void AHCIProbeAndListPorts(void);
 
 /// @brief SATAディスクを初期化 
 void InitSATA(void);
+
+/// @brief SATAデバイスからセクタ読み込み
+/// @param Abar AHCIデバイスのBAR
+/// @param PortIndex AHCI ポート番号
+/// @param Lba 読み込むセクタ
+/// @param Buf 出力バッファ
+/// @return 正常に読み取れればtrue
+bool AHCIReadSector(hba_mem_t*, int, u64, u8*);

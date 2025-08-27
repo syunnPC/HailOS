@@ -32,3 +32,7 @@ time_t GetSystemUpTime(void);
 /// @brief 指定されたミリ秒スリープ
 /// @param  Ms スリープする秒数（ミリ秒）
 void Sleep(u64);
+
+/// @brief TSC周波数を取得
+/// @return TSC周波数
+u64 GetTscFreq(void);

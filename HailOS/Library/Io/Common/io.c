@@ -54,4 +54,5 @@ u32 inl(u16 Port)
         : "=a"(result)
         : "Nd"(Port)
     );
+    return result;
 }

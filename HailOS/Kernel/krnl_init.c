@@ -7,6 +7,8 @@
 #include "fat32.h"
 #include "pic.h"
 #include "color.h"
+#include "hal_disk.h"
+#include "system_console.h"
 
 #define SYSTEM_DEFAULT_COLOR RGB(80, 80, 80)
 
@@ -20,5 +22,13 @@ void InitSystem(bootinfo_t* Info)
     InitMemoryManager(Info->MemoryInfo);
     InitTime(Info->ClockInfo);
     InitGraphics(Info->GraphicInfo, SYSTEM_DEFAULT_COLOR);
-    InitVbr();
+    disk_type_t type = HALInitDisk();
+    if(type != DISK_TYPE_NONE)
+    {
+        InitVbr();
+    }
+    else
+    {
+        puts("Failed to find a disk.\r\n");
+    }
 }

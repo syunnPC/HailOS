@@ -42,6 +42,8 @@ LIB_UTIL_SRC_DIR = $(LIBRARY_DIR)/Utility
 LIB_UTIL_FILE_SRC_DIR = $(LIB_UTIL_SRC_DIR)/File
 LIB_UTIL_BMP_SRC_DIR = $(LIB_UTIL_SRC_DIR)/BitmapImage
 LIB_VGA_SRC_DIR = $(LIBRARY_DIR)/Vga
+LIB_HAL_DIR = $(LIBRARY_DIR)/HAL
+LIB_HAL_DISK_DIR = $(LIB_HAL_DIR)/Disk
 
 STDC_SRC_DIR = Stdc
 
@@ -80,7 +82,8 @@ INCLUDES = \
     -I$(LIB_UTIL_FILE_SRC_DIR) \
     -I$(LIB_UTIL_BMP_SRC_DIR) \
     -I$(LIB_IO_PCI_SRC_DIR) \
-    -I$(LIB_IO_DISK_AHCI_SRC_DIR)
+    -I$(LIB_IO_DISK_AHCI_SRC_DIR) \
+    -I$(LIB_HAL_DISK_DIR)
 
 # Linker script
 LDSCRIPT = linker.ld
@@ -120,7 +123,8 @@ C_SOURCES_LIBRARY = \
     $(LIB_UTIL_FILE_SRC_DIR)/file.c \
     $(LIB_UTIL_BMP_SRC_DIR)/bitmap.c \
     $(LIB_IO_PCI_SRC_DIR)/pci.c \
-    $(LIB_IO_DISK_AHCI_SRC_DIR)/ahci.c
+    $(LIB_IO_DISK_AHCI_SRC_DIR)/ahci.c \
+    $(LIB_HAL_DISK_DIR)/hal_disk.c
 
 C_SOURCES_STDC = \
     $(STDC_SRC_DIR)/string.c

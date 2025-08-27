@@ -341,7 +341,7 @@ bool AHCIIdentifyDevice(hba_mem_t* Abar, int PortIndex)
     cfis->Command = ATA_CMD_IDENTIFY_DEVICE;
     cfis->Device = 1 << 6;
 
-    port->Is = 0xFFFFFFFF;
+    port->Is = (u32)0xFFFFFFFF;
 
     port->Ci = 1 << 0;
 
@@ -389,4 +389,73 @@ void InitSATA(void)
     int port = AHCIInitPort(abar);
     AHCIRebasePort(abar, port);
     AHCIIdentifyDevice(abar, port);
+}
+
+bool AHCIReadSector(hba_mem_t* Abar, int PortIndex, u64 Lba, u8* Buf)
+{
+    if(Buf == NULL)
+    {
+        return false;
+    }
+
+    hba_port_t* port = HBA_PORT(Abar, PortIndex);
+
+    hba_cmd_header_t* hdrs = (hba_cmd_header_t*)(addr_t)gCmdListMemory;
+    hba_cmd_header_t* cmdheader = &hdrs[0];
+
+    cmdheader->Cfl = sizeof(fis_reg_h2d_t)/sizeof(u32);
+    cmdheader->W = 0;
+    cmdheader->Prdtl = 1;
+
+    FillMemory(&gCmdTable, sizeof(gCmdTable), 0);
+
+    hba_prdt_entry_t* prdt = &gCmdTable.Prdt[0];
+    prdt->Dba = (u32)(addr_t)Buf;
+    prdt->Dbau = ((u64)Buf >> 32);
+    prdt->DbcI = (512-1) | (1u << 31);
+
+    fis_reg_h2d_t* cmdfis = (fis_reg_h2d_t*)(&gCmdTable.Cfis);
+    FillMemory(cmdfis, sizeof(fis_reg_h2d_t), 0);
+
+    cmdfis->FisType = FIS_TYPE_REG_H2D;
+    cmdfis->C = 1;
+    cmdfis->Command = ATA_CMD_READ_DMA_EXT;
+    cmdfis->Lba0 = (u8)(Lba & 0xFF);
+    cmdfis->Lba1 = (u8)((Lba >> 8) & 0xFF);
+    cmdfis->Lba2 = (u8)((Lba >> 16) & 0xFF);
+    cmdfis->Device = 1 << 6;
+    cmdfis->Lba3 = (u8)((Lba >> 24) & 0xFF);
+    cmdfis->Lba4 = (u8)((Lba >> 32) & 0xFF);
+    cmdfis->Lba5 = (u8)((Lba >> 40) & 0xFF);
+
+    cmdfis->Countl = 1;
+    cmdfis->Counth = 0;
+
+    cmdheader->Ctba = (u32)(addr_t)&gCmdTable;
+    cmdheader->Ctbau = 0;
+
+    port->Is = 0xFFFFFFFF;
+
+    port->Ci = 1 << 0;
+
+    u64 start = GetPerformanceCounter();
+    while(true)
+    {
+        if((port->Ci & (1 << 0)) == 0)
+        {
+            break;
+        }
+        
+        if(port->Is & HBA_PxIS_TFES)
+        {
+            return false;
+        }
+
+        if(PerformanceCounterTickToMs(GetPerformanceCounter()-start)>1000)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }

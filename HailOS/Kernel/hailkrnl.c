@@ -16,10 +16,7 @@
 void main(bootinfo_t* Info)
 {
     InitSystem(Info);
-
     EnumeratePCIDevicesAndPrint();
-
-    InitSATA();
 
     while(true){}
 }

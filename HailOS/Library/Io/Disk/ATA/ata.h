@@ -17,13 +17,21 @@
 #define ATA_COMMAND_PORT 0x1F7
 #define ATA_STATUS_PORT 0x1F7
 #define ATA_CTRL_BASE 0x3F6
-#define ATA_STATUS_ERR 0x1
 
 #define ATA_CMD_READ_SECTORS 0x20
+#define ATA_CMD_IDENTIFY 0xEC
 #define ATA_STATUS_BSY 0x80
 #define ATA_STATUS_DRQ 0x08
+#define ATA_STATUS_ERR 0x01
+
+#define ATA_REG_STATUS 0x07
+#define ATA_REG_DRIVE_HEAD 0x06
 
 /// @brief ディスクから512バイト（1セクタ）読み出し
 /// @param Lba 読みだすセクタ番号
 /// @param Buffer 読みだした内容を保存するバッファ（512バイト必要）
-void AtaReadSectorLba28(u32, u8*);
+void ATAReadSectorLBA28(u32, u8*);
+
+/// @brief IDE マスターデバイスの存在を確認
+/// @return 存在しているならtrue
+bool ATACheckDeviceMaster(void);

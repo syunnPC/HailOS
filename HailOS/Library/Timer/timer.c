@@ -46,3 +46,8 @@ void Sleep(u64 Ms)
     u64 start_tsc = ReadTsc();
     while(ReadTsc() < start_tsc + freq_ms * Ms);
 }
+
+u64 GetTscFreq(void)
+{
+    return sClockInfo->TscFreq;
+}
