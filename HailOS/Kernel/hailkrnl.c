@@ -16,7 +16,7 @@
 void main(bootinfo_t* Info)
 {
     InitSystem(Info);
-    EnumeratePCIDevicesAndPrint();
+    DrawBitmapInline("picture1.bmp");
 
     while(true){}
 }

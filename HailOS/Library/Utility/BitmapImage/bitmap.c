@@ -17,6 +17,13 @@ HOSstatus DrawBitmapToBuffer(const char* FileName, coordinate_t Location, rectan
     HOSstatus status = OpenFile(FileName, &file);
     if(HOS_ERROR(status))
     {
+        if(HOS_ERROR(status))
+        {
+            puts("DrawBitmapToBuffer() error at OpenFile(): ");
+            puts(utos(status));
+            puts("\r\n");
+            return status;
+        }
         return status;
     }
     bitmapfileheader_t bf = *(bitmapfileheader_t*)file.Buffer;

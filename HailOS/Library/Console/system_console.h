@@ -53,5 +53,5 @@ char ReadKeyWithEcho(rgb_t);
 size_t ReadInputWithEcho(char*, size_t, rgb_t, bool);
 
 /// @brief ビットマップをインラインに描画
-/// @param  ファイル名
+/// @param File ファイル名
 void DrawBitmapInline(const char*);

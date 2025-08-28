@@ -273,8 +273,12 @@ void DrawBitmapInline(const char* FileName)
     HOSstatus status = OpenFile(FileName, &object);
     if(HOS_ERROR(status))
     {
+        puts("DrawBitmapInline() error at OpenFile(): ");
+        puts(utos(status));
+        puts("\r\n");
         return;
     }
+    CloseFile(&object);
     u64 screen_height = GetScreenResolution().Height;
     if(screen_height - sCursorPos.Y < pic_size.Height)
     {
@@ -283,7 +287,13 @@ void DrawBitmapInline(const char* FileName)
         SetCursorPos(COORD(0, (screen_height - pic_size.Height) - FONT_HEIGHT));
         DrawBufferContentsToFrameBuffer();
     }
-    DrawBitmap(FileName, GetCursorPos(), NULL);
+    status = DrawBitmap(FileName, GetCursorPos(), NULL);
+    if(HOS_ERROR(status))
+    {
+        puts("DrawBitmapInline() error at DrawBitmap(): ");
+        puts(utos(status));
+        puts("\r\n");
+        return;
+    }
     SetCursorPos(COORD(0, GetCursorPos().Y+pic_size.Height));
-    CloseFile(&object);
 }

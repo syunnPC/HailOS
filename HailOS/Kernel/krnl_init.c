@@ -9,8 +9,9 @@
 #include "color.h"
 #include "hal_disk.h"
 #include "system_console.h"
+#include "string.h"
 
-#define SYSTEM_DEFAULT_COLOR RGB(80, 80, 80)
+#define SYSTEM_DEFAULT_COLOR RGB(70, 70, 70)
 
 void InitSystem(bootinfo_t* Info)
 {
@@ -31,4 +32,13 @@ void InitSystem(bootinfo_t* Info)
     {
         puts("Failed to find a disk.\r\n");
     }
+
+    puts("Welcome to HailOS\r\n");
+    puts("Screen resolution: ");
+    puts(utos(Info->GraphicInfo->HorizontalResolution));
+    puts(" x ");
+    puts(utos(Info->GraphicInfo->VerticalResolution));
+    puts("\r\nCurrent UNIX Time: ");
+    puts(utos(Info->ClockInfo->InitialUnixTime));
+    puts("\r\n");
 }
