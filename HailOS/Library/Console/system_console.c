@@ -20,6 +20,11 @@ static coordinate_t sCursorPos = {0, 0};
 /// @return 改行が必要ならtrue, そうでないならfalse
 static inline bool IsNewLineRequired(void)
 {
+    if(!IsGraphicAvailable())
+    {
+        return false; 
+    }
+
     rectangle_t screen_size = GetScreenResolution();
     if(sCursorPos.X > screen_size.Width - FONT_WIDTH)
     {
@@ -32,6 +37,11 @@ static inline bool IsNewLineRequired(void)
 /// @return 必要ならtrue, そうでないならfalse
 static inline bool IsScrollRequired(void)
 {
+    if(!IsGraphicAvailable())
+    {
+        return false; 
+    }
+
     rectangle_t screen_size = GetScreenResolution();
     if(sCursorPos.Y > screen_size.Height - FONT_HEIGHT)
     {
@@ -44,7 +54,7 @@ static inline bool IsScrollRequired(void)
 /// @param Ch 文字
 /// @return 可能ならtrue, そうでなければfalse
 static inline bool IsVisibleAsciiChar(char Ch)
-{
+{   
     if(Ch > 0x19 && Ch < 0x7f)
     {
         return true;
@@ -57,6 +67,11 @@ static inline bool IsVisibleAsciiChar(char Ch)
 /// @param Color 文字色
 static void PrintCharToBuffer(char Ch, rgb_t Color)
 {
+    if(!IsGraphicAvailable())
+    {
+        return; 
+    }
+
     if(IsVisibleAsciiChar(Ch))
     {
         const u8* font = ascii_font8x16[(int)Ch];
@@ -124,12 +139,22 @@ static void PrintCharToBuffer(char Ch, rgb_t Color)
 
 void PrintChar(char Ch, rgb_t Color)
 {
+    if(!IsGraphicAvailable())
+    {
+        return; 
+    }
+
     PrintCharToBuffer(Ch, Color);
     DrawBufferContentsToFrameBuffer();
 }
 
 void PrintString(const char* Str, rgb_t Color)
 {
+    if(!IsGraphicAvailable())
+    {
+        return; 
+    }
+
     for(size_t i=0; i<strlen(Str); i++)
     {
         PrintCharToBuffer(Str[i], Color);
@@ -139,6 +164,11 @@ void PrintString(const char* Str, rgb_t Color)
 
 void Scroll(u32 Line)
 {
+    if(!IsGraphicAvailable())
+    {
+        return; 
+    }
+
     if(Line == 0)
     {
         return;
@@ -169,6 +199,11 @@ coordinate_t GetCursorPos(void)
 
 void DeleteCharOnBuffer(void)
 {
+    if(!IsGraphicAvailable())
+    {
+        return; 
+    }
+
     if(sCursorPos.X > FONT_WIDTH)
     {
         sCursorPos.X -= FONT_WIDTH;
@@ -197,6 +232,11 @@ void DeleteCharOnBuffer(void)
 
 void DeleteChar(void)
 {
+    if(!IsGraphicAvailable())
+    {
+        return; 
+    }
+
     DeleteCharOnBuffer();
     FillScreenWithBackgroundColor();
     DrawBufferContentsToFrameBuffer();
@@ -204,6 +244,11 @@ void DeleteChar(void)
 
 char ReadKeyWithEcho(rgb_t Color)
 {
+    if(!IsGraphicAvailable())
+    {
+        return 0; 
+    }
+
     u8 sc;
     while(true)
     {
@@ -221,6 +266,11 @@ char ReadKeyWithEcho(rgb_t Color)
 
 size_t ReadInputWithEcho(char* Buffer, size_t BufferSize, rgb_t Color, bool NewLine)
 {
+    if(!IsGraphicAvailable())
+    {
+        return 0; 
+    }
+
     if(Buffer == NULL && BufferSize != 0)
     {
         return 0;
@@ -268,6 +318,11 @@ size_t ReadInputWithEcho(char* Buffer, size_t BufferSize, rgb_t Color, bool NewL
 
 void DrawBitmapInline(const char* FileName)
 {
+    if(!IsGraphicAvailable())
+    {
+        return; 
+    }
+
     file_object_t object;
     rectangle_t pic_size = GetPictureSize(FileName);
     HOSstatus status = OpenFile(FileName, &object);

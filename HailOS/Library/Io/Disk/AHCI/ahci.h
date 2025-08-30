@@ -200,3 +200,19 @@ void InitSATA(void);
 /// @param Buf 出力バッファ
 /// @return 正常に読み取れればtrue
 bool AHCIReadSector(hba_mem_t*, int, u64, u8*);
+
+/// @brief ポートを再ベース
+/// @param Abar 対象コントローラーのABAR
+/// @param PortIndex ポート番号
+void AHCIRebasePort(hba_mem_t*, int);
+
+/// @brief ポートを初期化
+/// @param Abar コントローラのABAR
+/// @return 初期化されたポート番号
+u32 AHCIInitPort(hba_mem_t*);
+
+/// @brief デバイスを識別
+/// @param Abar コントローラのABAR
+/// @param PortIndex ポート番号
+/// @return 成功ならtrue
+bool AHCIIdentifyDevice(hba_mem_t*, int);

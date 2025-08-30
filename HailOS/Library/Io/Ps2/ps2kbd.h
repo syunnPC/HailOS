@@ -7,8 +7,6 @@
 
 #include "basetype.h"
 
-#define PS2_DATA_PORT 0x60
-#define PS2_STATUS_PORT 0x64
 #define KEYCODE_MASK_RELEASE 0x80
 #define KEY_BUFFER_SIZE 256
 #define IRQ_KEYBOARD 1

@@ -16,3 +16,4 @@ __attribute__((interrupt)) void IsrDoubleFault(void*, u64);
 __attribute__((interrupt)) void IsrGPF(void*, u64);
 __attribute__((interrupt)) void IsrPageFault(void*, u64);
 __attribute__((naked)) void IsrKeyboard(void);
+__attribute__((naked)) void IsrMouse(void);

@@ -105,7 +105,7 @@ bool FindAHCIController(ahci_pci_info_t* Out)
     return false;
 }
 
-static void AHCIResetEnable(hba_mem_t* Hba)
+void AHCIResetEnable(hba_mem_t* Hba)
 {
     u64 start = GetPerformanceCounter();
     Hba->Ghc |= AHCI_GHC_HR;
@@ -225,20 +225,6 @@ void AHCIProbeAndListPorts(void)
     }
 }
 
-static int FindFreeSlot(hba_port_t* Port)
-{
-    u32 slots = Port->Sact | Port->Ci;
-    for(int i=0; i<32; i++)
-    {
-        if((slots & (1u << i)) == 0)
-        {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
 u32 AHCIInitPort(hba_mem_t* Abar)
 {
     u32 pi = Abar->Pi;
@@ -269,7 +255,7 @@ u32 AHCIInitPort(hba_mem_t* Abar)
     return -1;
 }
 
-static void AHCIRebasePort(hba_mem_t* Abar, int PortIndex)
+void AHCIRebasePort(hba_mem_t* Abar, int PortIndex)
 {
     hba_port_t* port = HBA_PORT(Abar, PortIndex);
 

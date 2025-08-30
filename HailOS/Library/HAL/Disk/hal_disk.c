@@ -16,7 +16,10 @@ disk_type_t HALInitDisk(void)
     {
         sInternalDiskInfo.Type = DISK_TYPE_AHCI;
         sInternalDiskInfo.Abar = (hba_mem_t*)pi.Abar;
-        InitSATA();
+        int port = AHCIInitPort(sInternalDiskInfo.Abar);
+        sInternalDiskInfo.PortIndex = port;
+        AHCIRebasePort(sInternalDiskInfo.Abar, port);
+        AHCIIdentifyDevice(sInternalDiskInfo.Abar, port);
         return DISK_TYPE_AHCI;
     }
     else if(ATACheckDeviceMaster())

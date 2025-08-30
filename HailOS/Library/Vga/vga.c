@@ -4,13 +4,14 @@
 #include "status.h"
 #include "util.h"
 #include "memutil.h"
+#include "cursor.h"
 
 static graphic_info_t* sGraphicInfo;
 static u8* sBuffer;
 static rgb_t sBackgroundColor;
 static bool sGraphicAvailability = false;
 
-#define NO_TRANSFER_BYTE 0xFF
+#define NO_TRANSFER_BYTE 0x00
 #define CALC_PIXEL_OFFSET(x, y) ((y*sGraphicInfo->PixelsPerScanLine + x)*PIXEL_SIZE)
 
 static const framebuffer_color_t NO_TRANSFER_COLOR = {NO_TRANSFER_BYTE, NO_TRANSFER_BYTE, NO_TRANSFER_BYTE, NO_TRANSFER_BYTE};
@@ -46,7 +47,7 @@ void InitGraphics(graphic_info_t* GraphicInfo, rgb_t Color)
 
 framebuffer_color_t ConvertColor(rgb_t Color)
 {
-    framebuffer_color_t result = {0, 0, 0, 0};
+    framebuffer_color_t result = {0, 0, 0, 255};
 
     switch(sGraphicInfo->PixelFormat) 
     {
@@ -92,6 +93,11 @@ rgb_t ConvertColorReverse(framebuffer_color_t Color)
 
 HOSstatus DrawPixel(coordinate_t Location, rgb_t Color)
 {
+    if(!sGraphicAvailability)
+    {
+        return STATUS_NOT_AVAILABLE;
+    }
+
     DrawPixelToBuffer(Location, Color);
     DrawPixelToRawFrame(Location, ConvertColor(Color));
     return STATUS_SUCCESS;
@@ -99,6 +105,11 @@ HOSstatus DrawPixel(coordinate_t Location, rgb_t Color)
 
 HOSstatus DrawPixelToBuffer(coordinate_t Location, rgb_t Color)
 {
+    if(!sGraphicAvailability)
+    {
+        return STATUS_NOT_AVAILABLE;
+    }
+
     if(Location.X >= sGraphicInfo->HorizontalResolution || Location.Y >= sGraphicInfo->VerticalResolution)
     {
         return STATUS_OUT_OF_RANGE;
@@ -114,6 +125,11 @@ HOSstatus DrawPixelToBuffer(coordinate_t Location, rgb_t Color)
 
 void DrawPixelToRawFrame(coordinate_t Location, framebuffer_color_t Color)
 {
+    if(!sGraphicAvailability)
+    {
+        return;
+    }
+
     addr_t offset = CALC_PIXEL_OFFSET(Location.X, Location.Y);
     framebuffer_color_t* pixel_addr = (framebuffer_color_t*)(sGraphicInfo->FrameBufferBase + offset);
     *pixel_addr = Color;
@@ -121,22 +137,49 @@ void DrawPixelToRawFrame(coordinate_t Location, framebuffer_color_t Color)
 
 void DrawBufferContentsToFrameBuffer(void)
 {
+    if(!sGraphicAvailability)
+    {
+        return;
+    }
+
+    FillScreenWithBackgroundColor();
     for(u32 y=0; y<sGraphicInfo->VerticalResolution; y++)
     {
         for(u32 x = 0; x < sGraphicInfo->HorizontalResolution; x++)
         {
             addr_t offset = CALC_PIXEL_OFFSET(x, y);
             framebuffer_color_t* buffer_pixel_addr = (framebuffer_color_t*)((addr_t)sBuffer+offset);
-            if(!MemEq(buffer_pixel_addr, &NO_TRANSFER_COLOR, PIXEL_SIZE))
+            if(buffer_pixel_addr->Color4 != 0)
             {
                 DrawPixelToRawFrame(COORD(x,y), *buffer_pixel_addr);
             }
         }
     }
+    if(gCursorDrawBuffer != NULL)
+    {
+        for(u32 y=0; y<sGraphicInfo->VerticalResolution; y++)
+        {
+            for(u32 x = 0; x < sGraphicInfo->HorizontalResolution; x++)
+            {
+                addr_t offset = CALC_PIXEL_OFFSET(x, y);
+                framebuffer_color_t* buffer_pixel_addr = (framebuffer_color_t*)((addr_t)gCursorDrawBuffer+offset);
+                if(buffer_pixel_addr->Color4 != 0)
+                {
+                    DrawPixelToRawFrame(COORD(x,y), *buffer_pixel_addr);
+                }
+            }
+        }
+    }
+    
 }
 
 void ClearBuffer(void)
 {
+    if(!sGraphicAvailability)
+    {
+        return;
+    }
+
     FillMemory(sBuffer, sGraphicInfo->FrameBufferSize, NO_TRANSFER_BYTE);
 }
 
@@ -241,6 +284,11 @@ rgb_t SetBackgroundColor(rgb_t Color)
 
 rgb_t ChangeBackgroundColor(rgb_t Color)
 {
+    if(!sGraphicAvailability)
+    {
+        return Color;
+    }
+
     rgb_t prev_color = sBackgroundColor;
     SetBackgroundColor(Color);
     FillScreenWithBackgroundColor();
@@ -250,6 +298,11 @@ rgb_t ChangeBackgroundColor(rgb_t Color)
 
 void FillScreenWithBackgroundColor(void)
 {
+    if(!sGraphicAvailability)
+    {
+        return;
+    }
+
     framebuffer_color_t fb_color = ConvertColor(sBackgroundColor);
 
     for(u32 y=0; y<sGraphicInfo->VerticalResolution; y++)
@@ -263,20 +316,54 @@ void FillScreenWithBackgroundColor(void)
 
 rectangle_t GetScreenResolution(void)
 {
+    if(!sGraphicAvailability)
+    {
+        return RECT(0, 0);
+    }
+
     return RECT(sGraphicInfo->HorizontalResolution, sGraphicInfo->VerticalResolution);
 }
 
 void SetEmptyPixelOnBuffer(coordinate_t Location)
 {
+    if(!sGraphicAvailability)
+    {
+        return;
+    }
+
     addr_t offset = CALC_PIXEL_OFFSET(Location.X, Location.Y);
     framebuffer_color_t* pixel_addr = (framebuffer_color_t*)((addr_t)sBuffer + offset);
     *pixel_addr = NO_TRANSFER_COLOR;
 }
 
-
 void ShiftBufferContentsAndDraw(u32 SizePx, Direction ShiftDirection)
 {
+    if(!sGraphicAvailability)
+    {
+        return;
+    }
+
     ShiftBufferContents(SizePx, ShiftDirection);
     FillScreenWithBackgroundColor();
     DrawBufferContentsToFrameBuffer();
+}
+
+u32 GetPixelPerScanLine(void)
+{
+    if(!sGraphicAvailability)
+    {
+        return 0;
+    }
+
+    return sGraphicInfo->PixelsPerScanLine;
+}
+
+void* GetFrameBufferRawAddress(void)
+{
+    if(!sGraphicAvailability)
+    {
+        return NULL;
+    }
+
+    return (void*)sGraphicInfo->FrameBufferBase;
 }

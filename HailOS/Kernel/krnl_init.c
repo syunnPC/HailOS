@@ -10,19 +10,32 @@
 #include "hal_disk.h"
 #include "system_console.h"
 #include "string.h"
+#include "cursor.h"
+#include "ps2mouse.h"
+#include "io.h"
 
 #define SYSTEM_DEFAULT_COLOR RGB(70, 70, 70)
 
 void InitSystem(bootinfo_t* Info)
 {
     InitGDT();
-    InitIDT();
     RemapPic(PIC_MASTER_ISR_OFFSET, 0x28);
+    InitIDT();
+    PicUnmaskIrq(2);
     PicUnmaskIrq(IRQ_KEYBOARD);
-    asm volatile("sti");
     InitMemoryManager(Info->MemoryInfo);
     InitTime(Info->ClockInfo);
     InitGraphics(Info->GraphicInfo, SYSTEM_DEFAULT_COLOR);
+    if(!InitMouse())
+    {
+        puts("Failed to initialize PS/2 Mouse.\r\n");
+    }
+    else
+    {
+        PicUnmaskIrq(IRQ_MOUSE);
+        puts("PS/2 Mouse initialization completed.\r\n");
+    }
+    asm volatile("sti");
     disk_type_t type = HALInitDisk();
     if(type != DISK_TYPE_NONE)
     {

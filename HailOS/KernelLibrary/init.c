@@ -110,11 +110,11 @@ void InitIDT() {
     SetIDTEntry(13, IsrGPF,           IDT_TYPE_INTERRUPT_GATE); // #GP (error code pushed)
     SetIDTEntry(14, IsrPageFault,     IDT_TYPE_INTERRUPT_GATE); // #PF (error code pushed)
     SetIDTEntry(IRQ_IDT(IRQ_KEYBOARD), IsrKeyboard, IDT_TYPE_INTERRUPT_GATE);
+    SetIDTEntry(IRQ_IDT(IRQ_MOUSE), IsrMouse, IDT_TYPE_INTERRUPT_GATE);
     // Add more as needed, e.g., breakpoint (int3), NMI, etc.
 
     gIDTR.Limit = sizeof(gIDT) - 1;
     gIDTR.Base  = (u64)&gIDT;
 
     asm volatile ("lidt %0" : : "m"(gIDTR));
-
 }

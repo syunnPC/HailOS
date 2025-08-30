@@ -80,3 +80,11 @@ void SetEmptyPixelOnBuffer(coordinate_t);
 /// @param SizePx 動かすサイズ（ピクセル単位）
 /// @param  ShiftDirection 動かす方向
 void ShiftBufferContentsAndDraw(u32, Direction);
+
+/// @brief PPSLを取得
+/// @return PPSL
+u32 GetPixelPerScanLine(void);
+
+/// @brief フレームバッファのアドレスを取得
+/// @return フレームバッファのアドレス
+void* GetFrameBufferRawAddress(void);

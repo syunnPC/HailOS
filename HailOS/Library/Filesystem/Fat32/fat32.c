@@ -225,13 +225,11 @@ bool FindFat32Partition(u64* OutLba)
             if(MemEq(entry.PartitionTypeGuid, ESP_GUID, 16))
             {
                 puts("Found EFI System Partition.\r\n");
-                Sleep(5000);
                 guid_match = true;
             }
             else if(MemEq(entry.PartitionTypeGuid, MS_BASIC_DATA_GUID, 16))
             {
                 puts("Found Microsoft Basic DATA Partition.\r\n");
-                Sleep(5000);
                 guid_match = true;
             }
 

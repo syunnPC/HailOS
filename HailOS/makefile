@@ -45,6 +45,7 @@ LIB_VGA_SRC_DIR = $(LIBRARY_DIR)/Vga
 LIB_HAL_DIR = $(LIBRARY_DIR)/HAL
 LIB_HAL_DISK_DIR = $(LIB_HAL_DIR)/Disk
 
+UI_DIR = UserInterface
 STDC_SRC_DIR = Stdc
 
 # --- Compiler and Linker Flags ---
@@ -83,7 +84,8 @@ INCLUDES = \
     -I$(LIB_UTIL_BMP_SRC_DIR) \
     -I$(LIB_IO_PCI_SRC_DIR) \
     -I$(LIB_IO_DISK_AHCI_SRC_DIR) \
-    -I$(LIB_HAL_DISK_DIR)
+    -I$(LIB_HAL_DISK_DIR) \
+    -I$(UI_DIR)
 
 # Linker script
 LDSCRIPT = linker.ld
@@ -124,17 +126,22 @@ C_SOURCES_LIBRARY = \
     $(LIB_UTIL_BMP_SRC_DIR)/bitmap.c \
     $(LIB_IO_PCI_SRC_DIR)/pci.c \
     $(LIB_IO_DISK_AHCI_SRC_DIR)/ahci.c \
-    $(LIB_HAL_DISK_DIR)/hal_disk.c
+    $(LIB_HAL_DISK_DIR)/hal_disk.c \
+    $(LIB_IO_PS2_SRC_DIR)/ps2mouse.c
 
 C_SOURCES_STDC = \
     $(STDC_SRC_DIR)/string.c
+
+C_SOURCES_UI = \
+    $(UI_DIR)/cursor.c
 
 # All C sources except the one with special flags
 C_SOURCES = \
     $(C_SOURCES_KERNEL) \
     $(C_SOURCES_KERNEL_LIB) \
     $(C_SOURCES_LIBRARY) \
-    $(C_SOURCES_STDC)
+    $(C_SOURCES_STDC) \
+    $(C_SOURCES_UI)
 
 # Special C source file for interrupts (if it needs different flags)
 C_SOURCE_INTERRUPT = $(KERNEL_LIB_SRC_DIR)/interrupt.c

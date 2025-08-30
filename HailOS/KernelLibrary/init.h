@@ -11,6 +11,7 @@
 
 #define IRQ_IDT(x) 32+x
 #define IRQ_KEYBOARD 1
+#define IRQ_MOUSE 12
 
 extern gdt_entry_t gGDT[GDT_ENTRIES];
 extern gdtr_t gGDTR;

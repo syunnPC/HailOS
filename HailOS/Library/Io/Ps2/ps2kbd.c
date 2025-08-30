@@ -1,6 +1,7 @@
 #include "ps2kbd.h"
 #include "pic.h"
 #include "io.h"
+#include "ps2.h"
 
 u8 gKeyBuffer[KEY_BUFFER_SIZE];
 size_t gOffsetRead = 0, gOffsetWrite = 0;
