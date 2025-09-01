@@ -46,3 +46,42 @@ void EnumeratePCIDevicesAndPrint(void)
         }
     }
 }
+
+const char* PCIVendorIDToString(u16 Vendor)
+{
+    switch(Vendor)
+    {
+        case PCI_VENDOR_ID_AMD:
+            return "AMD";
+        case PCI_VENDOR_ID_ASUS:
+            return "ASUS";
+        case PCI_VENDOR_ID_DELL:
+            return "DELL";
+        case PCI_VENDOR_ID_INNOTEK:
+            return "INNOTEK";
+        case PCI_VENDOR_ID_INTEL:
+            return "INTEL";
+        case PCI_VENDOR_ID_MARVELL:
+            return "MARVELL";
+        case PCI_VENDOR_ID_MICRON:
+            return "MICRON";
+        case PCI_VENDOR_ID_MICROSOFT:
+            return "MICROSOFT";
+        case PCI_VENDOR_ID_MSI:
+            return "MSI";
+        case PCI_VENDOR_ID_NVIDIA:
+            return "NVIDIA";
+        case PCI_VENDOR_ID_ORACLE:
+            return "ORACLE";
+        case PCI_VENDOR_ID_REALTEK:
+            return "REALTEK";
+        case PCI_VENDOR_ID_SEAGATE:
+            return "SEAGATE";
+        case PCI_VENDOR_ID_VMWARE:
+            return "VMWARE";
+        case PCI_VENDOR_ID_INVALID:
+            return "Invalid PCI Vendor ID";
+        default:
+            return NULL;
+    }
+}

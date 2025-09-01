@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "basetype.h"
+
 #define PCI_VENDOR_ID_INVALID 0xFFFF
 #define PCI_VENDOR_ID_INTEL 0x8086
 #define PCI_VENDOR_ID_AMD 0x1022
@@ -17,3 +19,11 @@
 #define PCI_VENDOR_ID_SEAGATE 0x1BB1
 #define PCI_VENDOR_ID_ASUS 0x1043
 #define PCI_VENDOR_ID_DELL 0x1028
+#define PCI_VENDOR_ID_VMWARE 0x15AD
+#define PCI_VENDOR_ID_ORACLE 0x108E
+#define PCI_VENDOR_ID_INNOTEK 0x80EE
+
+/// @brief PCIベンダーIDから文字列へ変換
+/// @param Vendor ベンダーID
+/// @return 存在しないベンダーならNULL
+const char* PCIVendorIDToString(u16);
