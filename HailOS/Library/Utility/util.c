@@ -6,6 +6,7 @@
 #include "system_console.h"
 #include "common.h"
 #include "string.h"
+#include "status.h"
 
 NORETURN void Panic(HOSstatus Status, u64 Param, u32 Line)
 {
@@ -19,7 +20,9 @@ NORETURN void Panic(HOSstatus Status, u64 Param, u32 Line)
     ClearBuffer();
     puts("System Error! System halted.\r\nStatus: ");
     puts(utos(Status));
-    puts(", Parameter ");
+    puts(" (");
+    puts(StatusToString(Status) != NULL ? StatusToString(Status) : "unknown HOSstatus");
+    puts("), Parameter ");
     puts(utos(Param));
     puts(", at line ");
     puts(utos(Line));
@@ -41,8 +44,7 @@ NORETURN void HaltProcessor(void)
 NORETURN void ForceReboot(void)
 {
     struct {u16 Limit; u64 Base;} PACKED idtr = {0, 0};
-    asm volatile
-    (
+    asm volatile(
         "lidt %[idtr]\n\t"
         "int3\n\t"
         "hlt\n\t"

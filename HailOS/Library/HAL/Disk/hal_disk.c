@@ -31,8 +31,6 @@ disk_type_t HALInitDisk(void)
     {
         return DISK_TYPE_NONE;
     }
-
-    return DISK_TYPE_NONE;
 }
 
 bool HALDiskReadSector(disk_t* Disk, u64 Lba, u8* Buf)

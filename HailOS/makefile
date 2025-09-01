@@ -127,7 +127,8 @@ C_SOURCES_LIBRARY = \
     $(LIB_IO_PCI_SRC_DIR)/pci.c \
     $(LIB_IO_DISK_AHCI_SRC_DIR)/ahci.c \
     $(LIB_HAL_DISK_DIR)/hal_disk.c \
-    $(LIB_IO_PS2_SRC_DIR)/ps2mouse.c
+    $(LIB_IO_PS2_SRC_DIR)/ps2mouse.c \
+    $(LIB_COMMON_SRC_DIR)/status.c
 
 C_SOURCES_STDC = \
     $(STDC_SRC_DIR)/string.c

@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "basetype.h"
+
 #define STATUS_SUCCESS 0
 #define STATUS_ALREADY_SATISFIED 0x1
 
@@ -18,7 +20,6 @@
 #define STATUS_INVALID_PARAMETER 0xC0000007
 #define STATUS_MEMORY_ALLOCATION_FAILED 0xC0000008
 #define STATUS_BUFFER_TOO_SMALL 0xC0000009
-#define STATUS_NOT_SUPPORTED 0xC000000A
 #define STATUS_NOT_AVAILABLE 0xC000000B
 #define STATUS_ASSERTION_FAILED 0xC000000C
 #define STATUS_NO_MEMORY_AVAILABLE 0xC000000D
@@ -31,3 +32,8 @@
 
 //エラー判定マクロ
 #define HOS_ERROR(x) (x >= 0xC0000000)
+
+/// @brief HOSstatusを文字列に変換
+/// @param  Status ステータスコード
+/// @return 該当する文字列が無い場合はNULL
+const char* StatusToString(HOSstatus);
