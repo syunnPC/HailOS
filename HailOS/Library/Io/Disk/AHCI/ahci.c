@@ -349,8 +349,9 @@ bool AHCIIdentifyDevice(hba_mem_t* Abar, int PortIndex)
     {
         PANIC(STATUS_DISK_IO_ERROR, 5);
     }
-
+#ifdef DEBUG
     puts("IDENTIFY SUCCESS\r\n");
+#endif
     return true;
 }
 

@@ -8,7 +8,7 @@
 #include "string.h"
 #include "status.h"
 
-NORETURN void Panic(HOSstatus Status, u64 Param, u32 Line)
+NORETURN void Panic(HOSstatus Status, u64 Param, u32 Line, const char* FileName)
 {
     if(!IsGraphicAvailable())
     {
@@ -26,6 +26,8 @@ NORETURN void Panic(HOSstatus Status, u64 Param, u32 Line)
     puts(utos(Param));
     puts(", at line ");
     puts(utos(Line));
+    puts(" in file ");
+    puts(FileName);
     HaltProcessor();
 }
 

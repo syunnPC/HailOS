@@ -192,7 +192,9 @@ bool InitMouse(void)
 
     if(wait <= 0)
     {
+#ifdef DEBUG
         puts("Warning: PS/2 Controller config read timeout.\r\n");
+#endif
     }
 
     u8 status = inb(PS2_DATA_PORT);

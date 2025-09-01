@@ -7,7 +7,6 @@
 #include "timer.h"
 #include "string.h"
 #include "system_console.h"
-
 #include "fat32.h"
 #include "memutil.h"
 
@@ -19,9 +18,11 @@ HOSstatus DrawBitmapToBuffer(const char* FileName, coordinate_t Location, rectan
     {
         if(HOS_ERROR(status))
         {
+#ifdef DEBUG
             puts("DrawBitmapToBuffer() error at OpenFile(): ");
             puts(utos(status));
             puts("\r\n");
+#endif
             return status;
         }
         return status;

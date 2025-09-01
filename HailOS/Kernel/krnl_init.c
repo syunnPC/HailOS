@@ -14,7 +14,7 @@
 #include "ps2mouse.h"
 #include "io.h"
 
-#define SYSTEM_DEFAULT_COLOR RGB(70, 70, 70)
+#define SYSTEM_DEFAULT_COLOR RGB(60, 60, 60)
 
 void InitSystem(bootinfo_t* Info)
 {
@@ -33,7 +33,9 @@ void InitSystem(bootinfo_t* Info)
     else
     {
         PicUnmaskIrq(IRQ_MOUSE);
+#ifdef DEBUG
         puts("PS/2 Mouse initialization completed.\r\n");
+#endif
     }
     asm volatile("sti");
     disk_type_t type = HALInitDisk();

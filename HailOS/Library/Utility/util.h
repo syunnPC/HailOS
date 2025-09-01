@@ -12,7 +12,8 @@
 /// @param  Status ステータスコード
 /// @param  Param 問題の特定に役立つパラメータ
 /// @param  Line 問題が発生したソースファイルの行数
-NORETURN void Panic(HOSstatus, u64, u32);
+/// @param FileName ファイル名
+NORETURN void Panic(HOSstatus, u64, u32, const char*);
 
 /// @brief 強制再起動を実施（トリプルフォールトを発生させる）
 NORETURN void ForceReboot(void);
@@ -21,4 +22,4 @@ NORETURN void ForceReboot(void);
 NORETURN void HaltProcessor(void);
 
 //Panic()をコールするマクロ
-#define PANIC(Status, Param) Panic(Status, Param, __LINE__)
+#define PANIC(Status, Param) Panic(Status, Param, __LINE__, __FILE__)
