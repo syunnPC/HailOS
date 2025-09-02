@@ -23,7 +23,7 @@ typedef struct
 {
     char Signature[8]; //RSD PTR
     u8 Checksum;
-    char OEMID[8];
+    char OEMID[6];
     u8 Revision;
     u32 RsdtAddress;
     u32 Length;
