@@ -12,11 +12,13 @@
 #include "file.h"
 #include "pci.h"
 #include "ahci.h"
+#include "acpi.h"
 
 void main(bootinfo_t* Info)
 {
     InitSystem(Info);
     DrawBitmapInline("picture1.bmp");
 
-    while(true){}
+    Sleep(10000);
+    ACPIShutdown();
 }

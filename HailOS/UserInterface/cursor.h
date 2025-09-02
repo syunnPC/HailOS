@@ -22,3 +22,13 @@ void InitCursor(void);
 /// @param  Color 色
 /// @param  Pos カーソルの位置
 void UpdateCursorBuffer(rgb_t, coordinate_t);
+
+/// @brief カーソルを隠す 
+void HideCursor(void);
+
+/// @brief カーソルの状態を取得
+/// @return trueなら可視
+bool GetCursorState(void);
+
+/// @brief カーソルを表示
+void ShowCursor(void);

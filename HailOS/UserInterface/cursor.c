@@ -8,6 +8,7 @@ static rectangle_t sScreenSize;
 framebuffer_color_t* gCursorDrawBuffer;
 static u32 sPpsl;
 static framebuffer_color_t* sFBAddr;
+bool gCursorState;
 
 #define CALC_PIXEL_OFFSET(x, y) ((y*sPpsl + x)*sizeof(framebuffer_color_t))
 
@@ -23,6 +24,7 @@ const u8 Cursor[] =
 
 void InitCursor(void)
 {
+    gCursorState = true;
     sScreenSize = GetScreenResolution();
     sPpsl = GetPixelPerScanLine();
     sFBAddr = GetFrameBufferRawAddress();
@@ -36,6 +38,11 @@ void InitCursor(void)
 
 void UpdateCursorBuffer(rgb_t Color, coordinate_t Pos)
 {
+    if(gCursorState == false)
+    {
+        return;
+    }
+
     FillMemory(gCursorDrawBuffer, sizeof(framebuffer_color_t)*sScreenSize.Height*sScreenSize.Width, 0x00);
     u64 draw_x = Pos.X;
     u64 draw_y = Pos.Y;
@@ -63,4 +70,21 @@ void UpdateCursorBuffer(rgb_t Color, coordinate_t Pos)
     {
         DrawBufferContentsToFrameBuffer();
     }
+}
+
+void HideCursor(void)
+{
+    FillMemory(gCursorDrawBuffer, sizeof(framebuffer_color_t)*sScreenSize.Height*sScreenSize.Width, 0x00);
+    DrawBufferContentsToFrameBuffer();
+    gCursorState = false;
+}
+
+bool GetCursorState(void)
+{
+    return gCursorState;
+}
+
+void ShowCursor(void)
+{
+    gCursorState = true;
 }

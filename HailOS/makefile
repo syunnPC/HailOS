@@ -45,6 +45,9 @@ LIB_VGA_SRC_DIR = $(LIBRARY_DIR)/Vga
 LIB_HAL_DIR = $(LIBRARY_DIR)/HAL
 LIB_HAL_DISK_DIR = $(LIB_HAL_DIR)/Disk
 
+LIB_PM_DIR = $(LIBRARY_DIR)/PowerManagement
+LIB_PM_ACPI_DIR = $(LIB_PM_DIR)/ACPI
+
 UI_DIR = UserInterface
 STDC_SRC_DIR = Stdc
 
@@ -85,7 +88,8 @@ INCLUDES = \
     -I$(LIB_IO_PCI_SRC_DIR) \
     -I$(LIB_IO_DISK_AHCI_SRC_DIR) \
     -I$(LIB_HAL_DISK_DIR) \
-    -I$(UI_DIR)
+    -I$(UI_DIR) \
+    -I$(LIB_PM_ACPI_DIR)
 
 # Linker script
 LDSCRIPT = linker.ld
@@ -128,7 +132,8 @@ C_SOURCES_LIBRARY = \
     $(LIB_IO_DISK_AHCI_SRC_DIR)/ahci.c \
     $(LIB_HAL_DISK_DIR)/hal_disk.c \
     $(LIB_IO_PS2_SRC_DIR)/ps2mouse.c \
-    $(LIB_COMMON_SRC_DIR)/status.c
+    $(LIB_COMMON_SRC_DIR)/status.c \
+    $(LIB_PM_ACPI_DIR)/acpi.c
 
 C_SOURCES_STDC = \
     $(STDC_SRC_DIR)/string.c

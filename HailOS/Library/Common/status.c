@@ -48,6 +48,8 @@ const char* StatusToString(HOSstatus Status)
             return "STATUS_HAL_ERROR";
         case STATUS_FAT32_FILESYSTEM:
             return "STATUS_FAT32_FILESYSTEM";
+        case STATUS_ACPI_ERROR:
+            return "STATUS_ACPI_ERROR";
         default: 
             return NULL;
     }
