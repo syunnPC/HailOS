@@ -53,7 +53,7 @@ void InitGDT(void) {
     SetGDTEntry(2, 0, 0xFFFFF,
                 GDT_ACCESS_PRESENT | GDT_ACCESS_RING0 | GDT_ACCESS_CS_OR_DS | GDT_ACCESS_RW,
                 GDT_GRAN_PAGE_GRAN | GDT_GRAN_DB); // L-bit is 0
-
+                
     gGDTR.Limit = sizeof(gGDT) - 1;
     gGDTR.Base  = (u64)&gGDT;
 

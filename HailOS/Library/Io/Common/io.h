@@ -14,6 +14,11 @@ void outb(u16, u8);
 
 /// @brief IOポートに出力
 /// @param  Port 宛先ポート
+/// @param  Value 値
+void outw(u16, u16);
+
+/// @brief IOポートに出力
+/// @param  Port 宛先ポート
 /// @param  Value 値 
 void outl(u16, u32);
 
@@ -27,7 +32,7 @@ u8 inb(u16);
 /// @return 値
 u16 inw(u16);
 
-/// @brief IOポートから2バイト読み取り
+/// @brief IOポートから4バイト読み取り
 /// @param  Port 読み取るポート
 /// @return 値
 u32 inl(u16);
