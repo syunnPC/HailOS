@@ -32,7 +32,7 @@ void MouseHandler(void)
 
     sMouseBytes[sMouseCycle++] = data;
 
-    if(sMouseCycle == 2)
+    if(sMouseCycle == 3)
     {
         u8 b = sMouseBytes[0];
 
@@ -41,16 +41,6 @@ void MouseHandler(void)
 
         int dx = (i8)sMouseBytes[1];
         int dy = (i8)sMouseBytes[2];
-
-        if(sx)
-        {
-            dx |= 0xFFFFFF00;
-        }
-
-        if(sy)
-        {
-            dy |= 0xFFFFFF00;
-        }
 
         gMouseState.X += dx;
         gMouseState.Y -= dy;
@@ -75,9 +65,9 @@ void MouseHandler(void)
             gMouseState.Y = sScreenResolution.Height - 1;
         }
 
-        gMouseState.LeftButton = b & 0x01;
-        gMouseState.RightButton = b & 0x02;
-        gMouseState.MiddleButton = b & 0x04;
+        gMouseState.LeftButton = (b & 0x01) != 0;
+        gMouseState.RightButton = (b & 0x02) != 0;
+        gMouseState.MiddleButton = (b & 0x04) != 0;
 
         sMouseCycle = 0;
         
@@ -216,10 +206,12 @@ bool InitMouse(void)
         (void)inb(PS2_DATA_PORT);
     }
 
+    /*
     if(!WriteMouse(0xF6))
     {
         return false;
     }
+    */
 
     if(!WaitAck(PS2_WAIT_LOOP))
     {

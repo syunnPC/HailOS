@@ -43,3 +43,22 @@ typedef struct
     u32 OffsetHigh;
     u32 Reserved;
 }PACKED idt_entry_t;
+
+typedef struct
+{
+    u32 Reserved0;
+    u64 Rsp0;
+    u64 Rsp1;
+    u64 Rsp2;
+    u64 Reserved1;
+    u64 Ist1;
+    u64 Ist2;
+    u64 Ist3;
+    u64 Ist4;
+    u64 Ist5;
+    u64 Ist6;
+    u64 Ist7;
+    u64 Reserved2;
+    u16 Reserved3;
+    u16 IoMapBase;
+} PACKED tss_t;
