@@ -18,4 +18,6 @@ typedef struct
     meminfo_t* MemoryInfo;
     graphic_info_t* GraphicInfo;
     hw_clockinfo_t* ClockInfo;
+    addr_t RSDPPtr;
+    addr_t KernelStackTop;
 } PACKED bootinfo_t;

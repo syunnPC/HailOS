@@ -160,6 +160,8 @@ typedef struct
     meminfo_t* MemoryInfo;
     graphic_info_t* GraphicInfo;
     hwclockinfo_t* ClockInfo;
+    addr_t RSDPPtr;
+    addr_t KernelStackTop;
 } PACKED_STRUCTURE bootinfo_t;
 
 typedef void(*kernel_entrypoint_t)(bootinfo_t*);
@@ -173,6 +175,73 @@ hwclockinfo_t gHwClockInfo;
 #define SEC_PER_HOUR  ((UINTN)  3600)
 #define SEC_PER_DAY   ((UINTN) 86400)
 #define EPOCH_JULIAN_DATE  2440588
+
+typedef struct
+{
+    char Signature[8]; //RSD PTR
+    u8 Checksum;
+    char OEMID[6];
+    u8 Revision;
+    u32 RsdtAddress;
+    u32 Length;
+    u64 XsdtAddress;
+    u8 ExtendedChecksum;
+    u8 Reserved[3];
+} PACKED acpi_rsdp_t;
+
+#define ACPI_20_TABLE_GUID \
+{0x8868e871,0xe4f1,0x11d3,\
+{0xbc,0x22,0x00,0x80,0xc7,0x3c,0x88,0x81}}
+#define ACPI_TABLE_GUID \
+{0xeb9d2d30,0x2d88,0x11d3,\
+{0x9a,0x16,0x00,0x90,0x27,0x3f,0xc1,0x4d}}
+
+
+static EFI_GUID AcpiTableGuid = ACPI_TABLE_GUID;
+static EFI_GUID Acpi20TableGuid = ACPI_20_TABLE_GUID;
+
+static BOOLEAN ACPIChecksum(const void* Ptr, UINTN Length)
+{
+    const UINT8* p = (const UINT8*)Ptr;
+    UINT8 sum = 0;
+    for(UINTN i=0; i<Length; i++)
+    {
+        sum += p[i];
+    }
+
+    return (sum == 0);
+}
+
+acpi_rsdp_t* FindRSDP(EFI_SYSTEM_TABLE* SystemTable)
+{
+    for(UINTN i=0; i<SystemTable->NumberOfTableEntries; i++)
+    {
+        EFI_CONFIGURATION_TABLE* ct = &SystemTable->ConfigurationTable[i];
+        if(CompareGuid(&ct->VendorGuid, &Acpi20TableGuid) || CompareGuid(&ct->VendorGuid, &AcpiTableGuid))
+        {
+            acpi_rsdp_t* rsdp = (acpi_rsdp_t*)ct->VendorTable;
+
+            if(rsdp->Revision == 0)
+            {
+                if(!ACPIChecksum(rsdp, 20))
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                if(!ACPIChecksum(rsdp, rsdp->Length))
+                {
+                    continue;
+                }
+            }
+
+            return rsdp;
+        }
+    }
+
+    return NULL;
+}
 
 //From github: TimeBaseLib.h impl
 
@@ -519,7 +588,16 @@ EFI_STATUS EFIAPI UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* Syste
     UINT32 DescriptorVesion = 0;
     EFI_TIME CurrentTime;
     u64 Start, End;
-    bootinfo_t BootInfo = {0, NULL, &gMemoryInfo, &gGraphicInfo, &gHwClockInfo};
+    acpi_rsdp_t* rsdp = FindRSDP(SystemTable);
+    bootinfo_t BootInfo = {0, NULL, &gMemoryInfo, &gGraphicInfo, &gHwClockInfo, (addr_t)rsdp, 0};
+
+    if(rsdp == NULL)
+    {
+        Print(L"ACPI RSDP not found.\n");
+    }
+
+    void* top = AllocatePages(4);
+    BootInfo.KernelStackTop = (addr_t)((void*)(UINT8*)top + 4 * 4096);
 
     Print(L"Initializing graphics... ");
     Status = InitializeGraphics();
