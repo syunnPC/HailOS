@@ -2,6 +2,8 @@
 #include "vgatype.h"
 #include "vga.h"
 #include "memutil.h"
+#include "bitmap.h"
+#include "status.h"
 #include "system_console.h"
 
 static rectangle_t sScreenSize;
@@ -22,6 +24,9 @@ const u8 Cursor[] =
     0b10000000,0b11000000,0b11100000,0b11110000,0b11111000,0b11111100,0b11111110,0b11111111,0b11111000,0b11011100,0b10011100,0b00001110,0b00001110,0b00000111,0b00000111,0b00000011
 };
 
+rgb_t** gCursorImageBuffer;
+rectangle_t gCursorImageSize;
+
 void InitCursor(void)
 {
     gCursorState = true;
@@ -32,6 +37,19 @@ void InitCursor(void)
     if(gCursorDrawBuffer == NULL)
     {
         puts("Failed to allocate memory. Cannot start cursor.\r\n");
+        return;
+    }
+}
+
+void InitCursorEx(const char* FileName)
+{
+    gCursorState = true;
+    sScreenSize = GetScreenResolution();
+    sPpsl = GetPixelPerScanLine();
+    sFBAddr = GetFrameBufferRawAddress();
+    HOSstatus status = BitmapToRGBArray(FileName, &gCursorImageBuffer, &gCursorImageSize);
+    if(HOS_ERROR(status))
+    {
         return;
     }
 }

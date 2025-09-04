@@ -66,3 +66,5 @@ HOSstatus DrawBitmap(const char*, coordinate_t, rectangle_t*);
 /// @param  FileName ファイル名
 /// @return 画像が存在しなければ0x0、そうでなければ画像のサイズのrectangle
 rectangle_t GetPictureSize(const char*);
+
+HOSstatus BitmapToRGBArray(const char *FileName, rgb_t ***Result, rectangle_t *OutSize);
