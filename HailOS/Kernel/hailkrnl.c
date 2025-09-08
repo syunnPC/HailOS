@@ -18,7 +18,4 @@ void main(bootinfo_t* Info)
 {
     InitSystem(Info);
     DrawBitmapInline("picture1.bmp");
-
-    Sleep(10000);
-    ACPIShutdown();
 }

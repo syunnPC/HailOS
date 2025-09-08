@@ -8,6 +8,26 @@
 #include "string.h"
 #include "status.h"
 
+char* utos_static(u64 n)
+{
+    static char buf[32]; // 再入不可, ただしPanic出力用なら十分
+    int i = 30;
+    buf[31] = '\0';
+
+    if (n == 0)
+    {
+        buf[30] = '0';
+        return &buf[30];
+    }
+
+    while (n > 0 && i > 0)
+    {
+        buf[i--] = '0' + (n % 10);
+        n /= 10;
+    }
+    return &buf[i + 1];
+}
+
 NORETURN void Panic(HOSstatus Status, u64 Param, u32 Line, const char* FileName)
 {
     if(!IsGraphicAvailable())
@@ -19,7 +39,7 @@ NORETURN void Panic(HOSstatus Status, u64 Param, u32 Line, const char* FileName)
     SetCursorPos(COORD(0,0));
     ClearBuffer();
     puts("System Error! System halted.\r\nStatus: ");
-    puts(utos(Status));
+    puts(utos_static((u64)Status));
     puts(" (");
     puts(StatusToString(Status) != NULL ? StatusToString(Status) : "unknown HOSstatus");
     puts("), Parameter ");

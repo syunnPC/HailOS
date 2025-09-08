@@ -21,6 +21,7 @@ void InitSystem(bootinfo_t* Info)
     InitGDT();
     RemapPic(PIC_MASTER_ISR_OFFSET, 0x28);
     InitIDT();
+    PicUnmaskIrq(0);
     PicUnmaskIrq(2);
     PicUnmaskIrq(IRQ_KEYBOARD);
     InitMemoryManager(Info->MemoryInfo);
